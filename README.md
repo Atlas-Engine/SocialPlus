@@ -1,81 +1,60 @@
-SocialPlus
+# SocialPlus
 
-A Modern Social Upgrade for World of Warcraft: MoP Classic
+A simple upgrade for the MoP Classic friends list.  
+Easy to use, easy to understand, and makes the Social panel way better.
 
-SocialPlus enhances the MoP Classic friends list with modern UI behavior, a smarter invite engine, customizable friend groups, and quality-of-life improvements that make the social panel more intuitive and powerful.
-Lightweight, responsive, and designed to feel native to the game.
+## ⭐ What It Does
+SocialPlus fixes the old MoP Classic Social UI so it works the way you expect in 2025.
 
-⭐ Features
-🎯 Smart Invite System (BNet + Non-BNet)
+- Lets you **invite anyone** — Battle.net friends or normal WoW friends.
+- Fixes weird **cross-realm** invite errors.
+- Makes the friends list cleaner and easier to read.
+- Adds **custom friend groups** so you can organize people your way.
 
-SocialPlus replaces Blizzard’s outdated MoP-era invite logic with a custom engine:
+## 🎯 Smarter Invites (BNet + Non-BNet)
+The game’s default invite rules are messy in MoP Classic.  
+SocialPlus replaces them with something that actually works:
 
-Works for Battle.net friends.
+- Invite Battle.net friends  
+- Invite non-BNet WoW friends  
+- Works cross-realm  
+- Shows clear messages when an invite isn’t possible  
+- No more random Blizzard restriction bugs
 
-Works for normal WoW friends (non-BNet).
+## 👥 Friend Groups
+Sort your friends like folders:
 
-Supports cross-realm invites in MoP Classic.
+- Make groups  
+- Add or remove people  
+- Collapse groups  
+- Clean visual sections  
+- Everything saves automatically
 
-Shows clear red tooltips when inviting is not possible.
+## 🎨 UI Improvements
+- Shows correct faction icons  
+- Restores missing invite buttons  
+- No layout bugs  
+- Feels native — blends perfectly with Blizzard’s UI  
 
-Blizzard’s client restrictions are inconsistent in MoP Classic — SocialPlus fixes that.
+## ⚙️ Simple Options
+Right-click a group to:
 
-👥 Friend Groups
+- Hide offline friends  
+- Collapse or expand  
+- Rename or remove the group  
+- Hide max-level characters  
+- Toggle class-colored names  
 
-Organize your friends list your way:
+## 🔧 MoP Classic Fixes
+SocialPlus smooths out old MoP code problems:
 
-Create custom groups.
+- Fixes cross-realm invite issues  
+- Fixes wrong restriction messages  
+- Keeps offline players from showing wrong icons  
 
-Assign or remove friends.
+## 🙏 Credits
+Inspired by the original Mikeprod FriendGroups addon.  
+Rebuilt and modernized for MoP Classic.
 
-Collapsible category headers.
-
-Clean visual separation.
-
-Persistent saved settings.
-
-Perfect for large or community-driven friend lists.
-
-🎨 UI Enhancements
-
-Shows your own faction icon for players in MoP Classic.
-
-Invite buttons restored for non-BNet WoW friends.
-
-No layout conflicts with UI frameworks.
-
-Everything integrates seamlessly into Blizzard’s Social UI.
-
-⚙️ Customization Options
-
-Right-click any group header to access:
-
-Hide all max-level characters.
-
-Enable or disable class-colored names.
-
-Hide all offline players.
-
-Collapse or expand groups.
-
-Remove or rename groups.
-
-🔧 MoP-Classic Engine Improvements
-
-MoP Classic uses a hybrid social API that causes inconsistent behavior in the default UI.
-SocialPlus improves these areas:
-
-Restores cross-realm invites.
-
-Fixes incorrect realm/client restriction messages.
-
-Ensures offline characters never retain faction icons.
-
-🙏 Credits
-
-Inspired by the Mikeprod version of FriendGroups.
-SocialPlus is a full modernization and rebuild tailored specifically for MoP Classic.
-
-📄 License
-
-MIT License — simple, permissive, and fully compatible with Blizzard’s addon policy.
+## 📄 License
+MIT License — free, simple, no restrictions.
