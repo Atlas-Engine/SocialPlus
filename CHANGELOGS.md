@@ -1,56 +1,44 @@
-### 1.0.5 — Full Localization Update
-- Added complete English + French localization using auto-detected client locale.
-- Localized every right-click menu option, group submenu, and settings toggle.
-- Localized all popups (rename group, create group, set note, copy name).
-- Localized “[no group]” header to display properly as “Ungrouped / Sans groupe”.
-- Localized “No groups” and “No groups to remove” messages in submenus.
-- Localized invite error messages for BNet players (wrong game, wrong version, no realm).
-- Improved internal consistency and removed the last remaining hardcoded English.
-- Minor cleanup of duplicate variable and header text alignment.
+v1.0.6 – SocialPlus Friends Overhaul
 
-### 1.0.4 — 2025-12-01
-- Enhanced responsiveness when scrolling through large friend lists.
-- Minor internal cleanup to maintain code consistency and stability.
+• ✨ New accent-insensitive search bar
+  - Instant, live filtering on your friend list.
+  - Handles accents and symbols (é/è/ç/ß etc.) for easier name searching.
+  - Subtle neon glow when search is active.
 
-## [1.0.3] — 2025-12-01
-### New Features
-- **Search Box Added**
-  - Integrated a custom search input directly into the Friends Frame.
-  - Search is fully **accent-insensitive**, **symbol-insensitive**, and ignores casing.
-  - Instant filtering with normalized comparisons for both WoW friends and BNet friends.
-  - Maintains full compatibility with MoP Classic’s older UI XML structures.
+• 🌀 Smooth mousewheel scrolling
+  - Replaces chunky default scrolling with a fast, smooth ease-out animation.
+  - Tuned for ~8–10 wheel steps from top to bottom, even with large friend lists.
 
-### Improvements
-- **Copy Character Name: Auto-Close**
-  - Added Ctrl+C detection inside the “Copy character name” popup.
-  - Popup now closes automatically after a short delay, allowing the clipboard to receive the copy 100% reliably.
-  - Popup still supports Enter/Escape.
+• 📂 Modern friend context menu (right-click rows)
+  - Clean “Actions / Groups / Other options” structure.
+  - Quick Whisper and Invite for both WoW and Battle.net friends.
+  - Uses safe MoP-Classic-compatible hooks to prevent taint.
 
-- **High-Quality UI Polish**
-  - Reworked icon placement for WoW and BNet icons (faction, Battlenet, project).
-  - Fixed alignment issues and overlapping name text.
-  - Improved color handling with class colors, gray offline colors, and mobile indicators.
+• 🧾 Copy Character Name
+  - New option: “Copy character name”.
+  - Popup shows full Name-Realm and auto-highlights the text.
+  - Press Ctrl+C to copy; popup auto-closes immediately after.
 
-- **Secure API Wrappers**
-  - Wrapped friend/BNet APIs (`GetFriendInfo`, `BNGetFriendInfo`, `SetFriendNotes`, `BNSetFriendNote`) to eliminate MoP-era inconsistencies.
-  - Improved safety around invite checks, project ID mismatches, mobile friends, and realm resolution.
-  - Ensured compatibility with both MoP Classic and Retail-style structures.
+• 👥 Group quality-of-life improvements
+  - Group header right-click menu: Invite all, Rename group, Remove group, Settings.
+  - Protective behavior: the default “General” bucket avoids mass-invite/mass-remove.
+  - Group-wide invites only affect friends who are online in WoW.
 
-- **Grouping System Stability**
-  - Strengthened group parsing logic (using `#groupname` tags).
-  - Improved collapsed-state behavior.
-  - More robust group counters (online/offline).
-  - Cleaned separator rendering and header buttons.
+• ⚙️ Group Settings
+  - Hide offline friends.
+  - Hide max-level players.
+  - Toggle class-colored names (safe Classic-compatible Shaman color override included).
 
-### Fixes
-- Fixed ordering and alignment issues affecting BNet and WoW friend rows.
-- Eliminated several causes of misalignment when faction or game icons were missing.
-- Fixed rare issues where notes or names could return nil and create taint or errors.
-- Prevented popup menus from hooking protected Blizzard dropdowns on MoP Classic.
-- Corrected handling for mixed BNet/WoW indexing and offline state transitions.
+• 🌐 Full EN/FR localization pass
+  - All menu items, tooltips, and popups fully translated.
+  - Clean, modern phrasing in both languages.
 
-### Internal Cleanup
-- Standardized update flow for `SocialPlus_UpdateFriends`.
-- Normalized all references to modern and classic WoW APIs.
-- More defensive nil-checking everywhere to prevent edge-case errors.
-- Added safer tooltip refreshing logic.
+• 🛡️ Safer invites & removals
+  - Invite checks ensure friend is online, in WoW, on matching project, and has a valid realm.
+  - Tooltip explanations for invite failures.
+  - Battle.net removal uses confirmation popup with keyword and fallback API safety.
+
+• 🔧 Code cleanup & compatibility
+  - Unified Classic vs Retail friend/BNet API wrappers.
+  - Removed outdated hooks that caused UI taint.
+  - Centralized debug logging with FG_DEBUG flag.
