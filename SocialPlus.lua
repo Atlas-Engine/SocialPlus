@@ -98,10 +98,37 @@ if type(GetMaxPlayerLevel)=="function" then
 end
 
 -------------------------------------------------
--- SocialPlus simple search
+-- SocialPlus simple search (accent/symbol-insensitive)
 -------------------------------------------------
 local SP_SearchBox
-local SP_SearchTerm=nil  -- always lowercase or nil
+local SP_SearchTerm=nil  -- always normalized or nil
+
+-- Normalize text: lowercase, strip accents, remove non-alphanumerics
+local function SP_NormalizeText(str)
+    if not str then return "" end
+    str=str:lower()
+
+    local accents={
+        ["à"]="a",["á"]="a",["â"]="a",["ä"]="a",["ã"]="a",["å"]="a",["ā"]="a",
+        ["ç"]="c",
+        ["è"]="e",["é"]="e",["ê"]="e",["ë"]="e",["ē"]="e",
+        ["ì"]="i",["í"]="i",["î"]="i",["ï"]="i",["ī"]="i",
+        ["ñ"]="n",
+        ["ò"]="o",["ó"]="o",["ô"]="o",["ö"]="o",["õ"]="o",["ō"]="o",
+        ["ù"]="u",["ú"]="u",["û"]="u",["ü"]="u",["ū"]="u",
+        ["ý"]="y",["ÿ"]="y",
+    }
+
+    -- UTF-8–safe: walk characters and map accents
+    str=str:gsub("[%z\1-\127\194-\244][\128-\191]*",function(c)
+        return accents[c] or c
+    end)
+
+    -- Strip everything that is not a–z or 0–9
+    str=str:gsub("[^a-z0-9]","")
+
+    return str
+end
 
 local function SP_CreateSearchBox()
 	if SP_SearchBox or not FriendsFrame then return end
@@ -124,11 +151,14 @@ local function SP_CreateSearchBox()
 		SearchBoxTemplate_OnTextChanged(self)
 		local txt=self:GetText() or ""
 		txt=txt:match("^%s*(.-)%s*$") or ""
-		if txt=="" then
+
+		local norm=SP_NormalizeText(txt)
+		if norm=="" then
 			SP_SearchTerm=nil
 		else
-			SP_SearchTerm=string.lower(txt)
+			SP_SearchTerm=norm  -- already normalized (lowercase, no accents, no symbols)
 		end
+
 		FriendsList_Update()
 	end)
 
@@ -1086,10 +1116,10 @@ local function SocialPlus_Update(forceUpdate)
 		wipe(FriendButtons)
 		wipe(GroupTotal)
 		wipe(GroupOnline)
-		wipe(GroupSorted)
 		GroupCount=0
 
-		local term=SP_SearchTerm -- already lowercased
+
+		local term=SP_SearchTerm -- already normalized (lowercase, no accents/symbols)
 		local addButtonIndex=0
 		local totalButtonHeight=0
 
@@ -1137,10 +1167,10 @@ local function SocialPlus_Update(forceUpdate)
 					or characterName
 					or ""
 
-				primaryName=primaryName:lower()
-				local first=primaryName:match("^(%S+)") or primaryName
+				-- Normalize first word for search (ignores accents and symbols)
+				local normalized=SP_NormalizeText(firstWord(primaryName))
 
-				if first:sub(1,#term)==term then
+				if startsWith(normalized,term) then
 					AddButtonInfo(FRIENDS_BUTTON_TYPE_BNET,i)
 				end
 			end
@@ -1155,7 +1185,7 @@ local function SocialPlus_Update(forceUpdate)
 			if SocialPlus_SavedVars and SocialPlus_SavedVars.hide_offline and not connected then
 				-- skip offline if setting says so
 			elseif name and name~="" then
-				local searchName=firstWord(name):lower()
+				local searchName=SP_NormalizeText(firstWord(name))
 				if startsWith(searchName,term) then
 					AddButtonInfo(FRIENDS_BUTTON_TYPE_WOW,i)
 				end
@@ -1165,9 +1195,21 @@ local function SocialPlus_Update(forceUpdate)
 		FriendsScrollFrame.totalFriendListEntriesHeight=totalButtonHeight
 		FriendsScrollFrame.numFriendListEntries=addButtonIndex
 
+		-- Clear SocialPlus search and restore full list
+		function SocialPlus_ClearSearch()
+			if SP_SearchBox then
+				SP_SearchBox:SetText("")
+				SP_SearchBox:ClearFocus()
+			end
+			SP_SearchTerm=nil
+		end
+
+
+
 		SocialPlus_UpdateFriends()
 		return
 	end
+
 	-- <<< END SEARCH MODE >>>
 
 	-- normal grouped mode below
@@ -1498,9 +1540,11 @@ local function SocialPlus_OnFriendMenuClick(self)
 			end
 		end
 		SocialPlus_Update()
+		SocialPlus_ClearSearch()
 	end
 	HideDropDownMenu(1)
 end
+
 
 -- [[ Group rename / create popups ]]
 
@@ -1544,15 +1588,31 @@ end
 local function SocialPlus_Create(self,data)
 	local eb=self.editBox or self.EditBox
 	if not eb then return end
+
 	local input=eb:GetText()
 	if input=="" then
 		return
 	end
+
+	-- Apply group change
 	local note=AddGroup(data.note,input)
 	data.set(data.id,note)
+
+	-- Clear search so full list comes back
+	if SocialPlus_ClearSearch then
+		SocialPlus_ClearSearch()
+	end
+
+	-- Rebuild list
 	pcall(SocialPlus_Update)
+
+	-- Explicitly close the popup (works for both Accept click and Enter)
+	if self and self.Hide then
+		self:Hide()
+	end
 end
 
+-- [[ Friend-note popup ]]
 StaticPopupDialogs["FRIEND_GROUP_RENAME"]={
 	text="Enter new group name",
 	button1=ACCEPT,
@@ -1569,6 +1629,7 @@ StaticPopupDialogs["FRIEND_GROUP_RENAME"]={
 	hideOnEscape=1
 }
 
+-- [[ Friend-group create popup ]]
 StaticPopupDialogs["FRIEND_GROUP_CREATE"]={
 	text="Enter new group name",
 	button1=ACCEPT,
@@ -1578,13 +1639,13 @@ StaticPopupDialogs["FRIEND_GROUP_CREATE"]={
 	EditBoxOnEnterPressed=function(self)
 		local parent=self:GetParent()
 		SocialPlus_Create(parent,parent.data)
-		parent:Hide()
 	end,
 	timeout=0,
 	whileDead=1,
 	hideOnEscape=1
 }
 
+-- [[ Friend-note popup ]]	
 StaticPopupDialogs["FRIEND_SET_NOTE"]={
 	text="Enter a note for this friend",
 	button1=ACCEPT,
@@ -1711,32 +1772,60 @@ end
 -- [[ Copy-character-name popup ]]
 
 StaticPopupDialogs["FRIEND_GROUP_COPY_NAME"]={
-	text="Character name (Ctrl+C to copy):",
-	button1=OKAY,
-	button2=CANCEL,
-	hasEditBox=1,
-	OnShow=function(self,data)
-		local eb=self.editBox or self.EditBox
-		if eb and data and data.name then
-			eb:SetText(data.name)
-			eb:HighlightText()
-			eb:SetFocus()
-		end
-	end,
-	EditBoxOnEnterPressed=function(self)
-		self:GetParent():Hide()
-	end,
-	EditBoxOnEscapePressed=function(self)
-		self:GetParent():Hide()
-	end,
-	timeout=0,
-	whileDead=1,
-	hideOnEscape=1,
+    text="Character name (Ctrl+C to copy):",
+    button1=OKAY,
+    button2=CANCEL,
+    hasEditBox=1,
+
+    OnShow=function(self,data)
+        local eb=self.editBox or self.EditBox
+        if eb and data and data.name then
+            eb:SetText(data.name)
+            eb:HighlightText()
+            eb:SetFocus()
+        end
+
+        -- NEW: close on Ctrl+C with a small delay to allow the copy to complete
+        if eb then
+            local prevOnKeyDown=eb:GetScript("OnKeyDown")
+            eb:SetScript("OnKeyDown",function(editBox,key)
+                if prevOnKeyDown then
+                    prevOnKeyDown(editBox,key)
+                end
+
+                if IsControlKeyDown() and (key=="C" or key=="c") then
+                    local popup=editBox:GetParent()
+                    if popup and popup.Hide then
+                        -- delay ensures clipboard receives the copied text
+                        C_Timer.After(0.08,function()
+                            popup:Hide()
+                        end)
+                    end
+                end
+            end)
+        end
+    end,
+
+    EditBoxOnEnterPressed=function(self)
+        self:GetParent():Hide()
+    end,
+    EditBoxOnEscapePressed=function(self)
+        self:GetParent():Hide()
+    end,
+
+    timeout=0,
+    whileDead=1,
+    hideOnEscape=1,
 }
 
 -- [[ Group-wide invite / remove helpers ]]
 
 local function InviteOrGroup(clickedgroup,invite)
+	-- Extra safety: never run bulk ops on the implicit [no group] bucket
+	if not clickedgroup or clickedgroup=="" then
+		return
+	end
+
 	local groups={}
 
 	-- BNet friends
@@ -1811,16 +1900,35 @@ local menu_items={
 
 SocialPlus_Menu.initialize=function(self,level)
 	if not menu_items[level] then return end
+
+	-- Actual group key ("" means [no group])
+	local groupKey=UIDROPDOWNMENU_MENU_VALUE
+	local isNoGroup=(groupKey==nil or groupKey=="")
+
 	for _,items in ipairs(menu_items[level]) do
 		local info=UIDropDownMenu_CreateInfo()
+
 		for prop,value in pairs(items) do
-			info[prop]=value~="" and value or UIDROPDOWNMENU_MENU_VALUE~="" and UIDROPDOWNMENU_MENU_VALUE or "[no group]"
+			-- Replace empty text with the current group label
+			info[prop]=value~="" and value or (groupKey~="" and groupKey or "[no group]")
 		end
-		info.arg1=UIDROPDOWNMENU_MENU_VALUE
-		info.arg2=UIDROPDOWNMENU_MENU_VALUE
+
+		info.arg1=groupKey
+		info.arg2=groupKey
+
+		-- When right-clicking [no group], only "Settings" should be usable
+		if level==1 and isNoGroup then
+			if info.text=="Invite all to party"
+				or info.text=="Rename group"
+				or info.text=="Remove group" then
+				info.disabled=true
+			end
+		end
+
 		UIDropDownMenu_AddButton(info,level)
 	end
 end
+
 
 -- [[ Friend (row) right-click menu state ]]
 
@@ -2319,7 +2427,11 @@ end
 function SocialPlus_CreateGroupFromDropdown()
 	local kind,id,note,setter=SocialPlus_GetDropdownFriendNote()
 	if not kind or not id or not setter then return end
+
 	StaticPopup_Show("FRIEND_GROUP_CREATE",nil,nil,{id=id,note=note,set=setter})
+
+	-- Close the dropdown after clicking "Create new group"
+	CloseDropDownMenus()
 end
 
 function SocialPlus_ModifyGroupFromDropdown(group,mode)
@@ -2338,8 +2450,18 @@ function SocialPlus_ModifyGroupFromDropdown(group,mode)
 	end
 
 	setter(id,newNote)
+
+	-- Clear search so full list is shown after adding/removing
+	if SocialPlus_ClearSearch then
+		SocialPlus_ClearSearch()
+	end
+
+	-- Rebuild and close menus
 	SocialPlus_Update()
+	CloseDropDownMenus()
 end
+
+
 
 if not StaticPopupDialogs then
     StaticPopupDialogs={}
