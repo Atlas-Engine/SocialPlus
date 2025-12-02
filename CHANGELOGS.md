@@ -1,3 +1,19 @@
+# v1.0.8
+### Added
+• New scroll-speed customization slider (1.0–3.5 range)
+• Settings menu entry under Group Settings → Scroll speed
+• Full English/French localization for scroll-speed UI
+• Slow/Fast labels added for clearer UX
+
+### Improved
+• Scroll engine now uses SavedVars for per-account preferences
+• Popup redesigned into a clean, compact custom dialog
+• Removed Blizzard Low/High slider labels to avoid duplicates
+
+### Fixed
+• Corrected menu syntax issues when adding Scroll Speed option
+• Ensured slider frame displays with proper size and anchoring
+
 v1.0.7
 - Fixed inconsistent mousewheel scrolling on accounts with smaller friend lists.
 - Added minimum scroll-step logic to ensure smooth scrolling across all regions.
