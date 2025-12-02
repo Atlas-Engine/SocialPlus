@@ -1,80 +1,88 @@
-# SocialPlus
+# 🌐 SocialPlus
 
-A modern, polished, MoP-Classic enhancement to the Friends List — engineered for players who want a Social panel that actually works in 2025.  
-Smooth, reliable, fully bilingual (EN/FR), and built with cross-realm play in mind.
+A refined, modernized upgrade to the MoP Classic Friends List — built for players who expect a smooth, reliable, 2025-quality social experience.  
+Fast, elegant, fully bilingual (EN/FR), and engineered with flawless cross-realm compatibility.
+
+Inspired by **Mikeprod’s FriendGroups**, transformed into a polished, contemporary social system.
 
 ---
 
-# English — Overview
+# 🇬🇧 English — Overview
 
-**SocialPlus replaces the clunky 2012 Social panel with a clean, modern, fully functional system designed for today’s MoP Classic experience.**
+**SocialPlus reimagines the outdated 2012 Social panel into a clean, intuitive, and powerful interface that finally matches the way players interact today.**
 
-Whether your friends are on the same server, another realm, or Battle.net, SocialPlus makes interactions effortless — from instant searching to seamless cross-realm invitations.
+From effortless cross-realm invitations to instant, accent-proof searching, every feature is designed to feel native, modern, and seamless.
 
-### 🔥 Key Advantages
+### 🔥 Core Advantages
 - **Instant Search Bar**  
-  Find friends immediately, even with accents or special characters.
+  Lightning-fast results, working even with accented or unconventional names.
 
-- **True Cross-Realm Invites**  
-  SocialPlus fixes the outdated MoP logic — you can now invite friends across realms reliably, with clear, intelligent messages when an invite isn’t possible.
+- **Reliable Cross-Realm Invites**  
+  SocialPlus repairs MoP’s broken logic.  
+  You can now invite friends on any realm with stable, predictable behavior and clear explanations when restrictions apply.
 
-- **Smart Friend Groups**  
-  Create, rename, delete, and auto-organize friends using simple note tags (`#GroupName`).  
-  No saved variables — everything lives in Blizzard’s note system.
+- **Intelligent Friend Groups**  
+  Create, rename, delete, and auto-organize groups using simple note tags (`#GroupName`).  
+  Everything stays synced using Blizzard’s own note system — no extra files.
 
-- **Clean, Modern Layout**  
-  Correct spacing, aligned icons, and collapsible sections with online/offline counters.
+- **Polished Visual Layout**  
+  Correct icon alignment, fixed spacing, and collapsible categories with online/offline indicators.
 
-- **Fully Bilingual (EN/FR)**  
-  Automatically adapts to your WoW client language.
+- **Full English/French Support**  
+  Automatically matches your WoW client language. Nothing to set up.
 
-- **Smooth Scrolling & Optimized Performance**  
-  Feels like the Social UI Blizzard *should* have shipped.
+- **Smooth Scroll & Performance Enhancements**  
+  Ultra-responsive scrolling and instant updates, even with large friend lists.
 
-### ✨ Why Players Love SocialPlus
-- Faster, clearer, and far more intuitive than the default Friends List  
-- Reliable invites for **both** BNet & character friends  
-- Perfect for guilds, PvP groups, and players with large friend lists  
-- 100% MoP-Classic compliant  
+### ✨ Why It Stands Out
+- Dramatically more usable than Blizzard’s default panel  
+- Flawless behavior for both Battle.net & character-based friends  
+- Ideal for guild management, PvP teams, social players, and alts  
+- No taint, no UI conflicts, 100% MoP Classic-safe  
 
-SocialPlus elevates the Social UI to modern standards — simple, powerful, and beautifully integrated.
+**SocialPlus delivers the Social UI MoP Classic always deserved — modern, precise, and beautifully integrated.**
 
 ---
 
-# Français — Présentation
+# 🇫🇷 Français — Présentation
 
-**SocialPlus transforme complètement le panneau Social de MoP Classic pour offrir une expérience moderne, fluide et adaptée au jeu d’aujourd’hui.**
+**SocialPlus remplace complètement le panneau Social daté de 2012 pour offrir une interface moderne, intuitive et parfaitement adaptée au jeu d’aujourd’hui.**
 
-Invitez vos amis qu’ils soient sur votre royaume, un autre serveur, ou sur Battle.net — SocialPlus rend tout cela simple et fiable.
+Des invitations inter-royaumes fiables à la recherche instantanée insensible aux accents, tout est conçu pour être fluide, cohérent et naturel.
 
-### 🔥 Points Forts
+### 🔥 Atouts Principaux
 - **Barre de recherche instantanée**  
-  Trouvez n’importe quel ami en un clin d'œil, même avec accents.
+  Résultats immédiats, compatible avec tous les noms, même ceux avec accents.
 
 - **Invitations inter-royaumes fiables**  
-  SocialPlus corrige la logique obsolète de MoP.  
-  Les invitations cross-serveur fonctionnent enfin comme elles devraient.
+  SocialPlus corrige les limites de MoP.  
+  Vous pouvez enfin inviter vos amis sur d’autres serveurs avec un comportement clair et stable.
 
 - **Groupes d’amis intelligents**  
-  Créez, renommez, supprimez et organisez vos groupes avec des balises simples (`#NomDuGroupe`).  
-  Aucun fichier externe — tout est stocké dans les notes Blizzard.
+  Créez, renommez, supprimez et organisez vos groupes simplement via des balises (`#NomDuGroupe`).  
+  Tout est géré via les notes Blizzard — aucun fichier externe.
 
-- **Interface propre et moderne**  
-  Icônes alignées, espacement corrigé, sections repliables avec compteur en ligne/hors ligne.
+- **Interface visuelle soignée**  
+  Icônes alignées, espacement corrigé, catégories repliables avec compteurs en ligne/hors ligne.
 
 - **Bilingue complet (EN/FR)**  
-  Se configure automatiquement selon la langue du client WoW.
+  L’addon adopte automatiquement la langue de votre client WoW.
 
 - **Défilement fluide & performance optimisée**  
-  On dirait une mise à jour officielle de Blizzard — en mieux.
+  Parfaitement réactif, même avec de longues listes d’amis.
 
-### ✨ Pourquoi les joueurs adorent SocialPlus
-- Plus rapide, plus clair et beaucoup plus intuitif que l’interface d’origine  
-- Invitations fiables pour les amis WoW **et** Battle.net  
-- Idéal pour les guildes, groupes PvP et grandes listes d’amis  
-- Totalement compatible MoP Classic  
+### ✨ Pourquoi SocialPlus se démarque
+- Plus clair, plus rapide, plus intuitif que le panneau d’origine  
+- Fonctionne parfaitement avec les amis Battle.net et en jeu  
+- Idéal pour les guildes, les équipes PvP et les joueurs sociaux  
+- Zéro taint, totalement sécurisé pour MoP Classic  
 
-SocialPlus apporte enfin au panneau Social la qualité qu’il mérite — moderne, efficace, parfaitement intégré.
+**SocialPlus apporte enfin la qualité, la fluidité et la modernité que l’interface sociale de MoP aurait dû avoir dès le départ.**
+
+---
+
+## 🙏 Credits / Crédits
+Inspired by **Mikeprod FriendGroups**, reimagined and rebuilt for MoP Classic in 2025.
 
 ---
 
