@@ -1,60 +1,91 @@
 # SocialPlus
 
-A simple upgrade for the MoP Classic friends list.  
-Easy to use, easy to understand, and makes the Social panel way better.
+A modern upgrade for the MoP Classic friends list — rebuilt to feel like Blizzard shipped it in 2025.
+Streamlined, polished, and dramatically more useful than the default Social panel.
 
-## ⭐ What It Does
-SocialPlus fixes the old MoP Classic Social UI so it works the way you expect in 2025.
+ 
 
-- Lets you **invite anyone** — Battle.net friends or normal WoW friends.
-- Fixes weird **cross-realm** invite errors.
-- Makes the friends list cleaner and easier to read.
-- Adds **custom friend groups** so you can organize people your way.
+## ⭐ Core Features
+SocialPlus introduces a smarter, cleaner, fully enhanced Social UI:
 
-## 🎯 Smarter Invites (BNet + Non-BNet)
-The game’s default invite rules are messy in MoP Classic.  
-SocialPlus replaces them with something that actually works:
+- **Real search bar** with accent-insensitive matching
+- **Universal invites** for BNet + WoW friends
+- **Custom friend groups** with clean organization tools
+- **Correct icons, clean layout, no overlaps or missing buttons**
+- **Safe, MoP-compatible code** with zero taint issues
 
-- Invite Battle.net friends  
-- Invite non-BNet WoW friends  
-- Works cross-realm  
-- Shows clear messages when an invite isn’t possible  
-- No more random Blizzard restriction bugs
+Everything feels native — just better.
 
-## 👥 Friend Groups
-Sort your friends like folders:
+ 
 
-- Make groups  
-- Add or remove people  
-- Collapse groups  
-- Clean visual sections  
-- Everything saves automatically
+## 🔍 Instant Search
+Find friends immediately by typing a few characters.
 
-## 🎨 UI Improvements
-- Shows correct faction icons  
-- Restores missing invite buttons  
-- No layout bugs  
-- Feels native — blends perfectly with Blizzard’s UI  
+- Matches both WoW and BNet entries
+- Normalizes accents and symbols
+- Updates results in real-time without performance cost
 
-## ⚙️ Simple Options
-Right-click a group to:
+ 
 
-- Hide offline friends  
-- Collapse or expand  
-- Rename or remove the group  
-- Hide max-level characters  
-- Toggle class-colored names  
+## 🎯 Modern Invite Logic
+Old MoP restrictions are replaced with clear and reliable behavior:
 
-## 🔧 MoP Classic Fixes
-SocialPlus smooths out old MoP code problems:
+- Direct invites for all BNet and in-game friends
+- Full cross-realm support
+- Accurate version checks
+- Meaningful messages when an invite isn’t possible
 
-- Fixes cross-realm invite issues  
-- Fixes wrong restriction messages  
-- Keeps offline players from showing wrong icons  
+The invite button finally behaves predictably.
+
+ 
+
+## 👥 Custom Groups
+Organize your list however you want:
+
+- Create, rename, and delete groups
+- Drag-free assignment via note-based tagging
+- Collapsible sections with online/offline counters
+- Automatically saved in friend notes using `#GroupName`
+
+A simple system that stays tidy forever.
+
+ 
+
+## ⚙️ Lightweight Options
+Right-click any group to configure:
+
+- Hide offline entries
+- Hide max-level characters
+- Toggle class colors
+- Manage or remove the group
+
+Everything is minimal, fast, and unobtrusive.
+
+ 
+
+## ✨ Quality of Life
+- Character names auto-highlight when copying
+- **Ctrl+C instantly closes the popup** with a safe clipboard-friendly delay
+- Stable tooltips
+- Consistent selection state
+- Optimized update routines for smooth scrolling
+
+ 
+
+## 🔧 MoP Fixes
+SocialPlus resolves several MoP-specific issues:
+
+- Incorrect restriction messages
+- Cross-realm invite inconsistencies
+- Realm name handling quirks
+
+Your friend list finally behaves like the modern game.
+
+ 
 
 ## 🙏 Credits
-Inspired by the original Mikeprod FriendGroups addon.  
-Rebuilt and modernized for MoP Classic.
+Inspired by the original **Mikeprod FriendGroups** addon.
+Rebuilt and expanded for MoP Classic with modern UI standards.
 
 ## 📄 License
-MIT License — free, simple, no restrictions.
+MIT License — open, simple, worry-free.
