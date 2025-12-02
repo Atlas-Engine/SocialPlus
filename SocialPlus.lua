@@ -225,12 +225,12 @@ end
 -- Global fallback shim: if something else calls SocialPlus_UpdateFriendButton as a
 -- global, route to our local function (if present), otherwise use a safe fallback.
 if not _G["SocialPlus_UpdateFriendButton"] then
-  _G["SocialPlus_UpdateFriendButton"] = function(button)
-    if type(SocialPlus_UpdateFriendButton)=="function" then
-      return SocialPlus_UpdateFriendButton(button)
-    end
-    return FRIENDS_BUTTON_HEIGHTS and FRIENDS_BUTTON_HEIGHTS[button and button.buttonType] or 1
-  end
+_G["SocialPlus_UpdateFriendButton"] = function(button)
+if type(SocialPlus_UpdateFriendButton)=="function" then
+return SocialPlus_UpdateFriendButton(button)
+end
+return FRIENDS_BUTTON_HEIGHTS and FRIENDS_BUTTON_HEIGHTS[button and button.buttonType] or 1
+end
 end
 
 local ONE_MINUTE=60
@@ -331,34 +331,34 @@ SP_SearchBox:SetFont(font,size,flags)
 SP_SearchBox:SetTextColor(1,1,1)
 SP_SearchBox.Instructions:SetTextColor(0.8,0.8,0.8)
 SP_SearchBox:SetScript("OnTextChanged", function(self)
-  SearchBoxTemplate_OnTextChanged(self)
-  local txt = self:GetText() or ""
-  txt = txt:match("^%s*(.-)%s*$") or ""
-  local norm = SP_NormalizeText(txt)
-  if norm == "" then
-    SP_SearchTerm = nil
-  else
-    SP_SearchTerm = norm  -- already normalized (lowercase, no accents, no symbols)
-  end
-  if SP_SearchGlow then
-    if SP_SearchTerm then
-      SP_SearchGlow:Show()
-      if SP_SearchGlowOuter then SP_SearchGlowOuter:Show() end
-    else
-      SP_SearchGlow:Hide()
-      if SP_SearchGlowOuter then SP_SearchGlowOuter:Hide() end
-    end
-  end
+SearchBoxTemplate_OnTextChanged(self)
+local txt = self:GetText() or ""
+txt = txt:match("^%s*(.-)%s*$") or ""
+local norm = SP_NormalizeText(txt)
+if norm == "" then
+SP_SearchTerm = nil
+else
+SP_SearchTerm = norm  -- already normalized (lowercase, no accents, no symbols)
+end
+if SP_SearchGlow then
+if SP_SearchTerm then
+SP_SearchGlow:Show()
+if SP_SearchGlowOuter then SP_SearchGlowOuter:Show() end
+else
+SP_SearchGlow:Hide()
+if SP_SearchGlowOuter then SP_SearchGlowOuter:Hide() end
+end
+end
 end)
 
 SP_SearchBox:SetScript("OnEscapePressed", function(self)
-  self:SetText("")
-  self:ClearFocus()
-  SP_SearchTerm = nil
-  if SP_SearchGlow then
-    SP_SearchGlow:Hide()
-  end
-  FriendsList_Update()
+self:SetText("")
+self:ClearFocus()
+SP_SearchTerm = nil
+if SP_SearchGlow then
+SP_SearchGlow:Hide()
+end
+FriendsList_Update()
 end)
 
 end
@@ -1269,7 +1269,7 @@ elseif button.buttonType==FRIENDS_BUTTON_TYPE_INVITE_HEADER then
 local header=FriendsScrollFrame.PendingInvitesHeaderButton
 header:SetPoint("TOPLEFT",button,1,0)
 header:Show()
-  header:SetFormattedText(FRIEND_REQUESTS,(type(FG_BNGetNumFriendInvites)=="function" and FG_BNGetNumFriendInvites() or 0))
+header:SetFormattedText(FRIEND_REQUESTS,(type(FG_BNGetNumFriendInvites)=="function" and FG_BNGetNumFriendInvites() or 0))
 local collapsed=GetCVarBool("friendInvitesCollapsed")
 if collapsed then
 header.DownArrow:Hide()
@@ -1345,11 +1345,11 @@ end
 -- [[ Full friends list rebuild ]]
 
 SocialPlus_UpdateFriends = function(forceUpdate)
-  -- Required core wrappers must be initialized before running an update.
-  if type(FG_GetNumFriends)~="function" or type(FG_BNGetNumFriends)~="function" then
-    FG_Debug("SocialPlus_UpdateFriends skipped: core FG_ wrappers not ready")
-    return
-  end
+-- Required core wrappers must be initialized before running an update.
+if type(FG_GetNumFriends)~="function" or type(FG_BNGetNumFriends)~="function" then
+FG_Debug("SocialPlus_UpdateFriends skipped: core FG_ wrappers not ready")
+return
+end
 local scrollFrame=FriendsScrollFrame
 local offset=HybridScrollFrame_GetOffset(scrollFrame)
 local buttons=scrollFrame.buttons
@@ -1370,13 +1370,13 @@ local button=buttons[i]
 local index=offset+i
 if index<=numFriendButtons then
 button.index=index
-    local height
-    if type(SocialPlus_UpdateFriendButton)=="function" then
-      height=SocialPlus_UpdateFriendButton(button)
-    else
-      FG_Debug("SocialPlus_UpdateFriendButton missing at runtime; using fallback height for button",button.index)
-      height=FRIENDS_BUTTON_HEIGHTS[button.buttonType] or 1
-    end
+local height
+if type(SocialPlus_UpdateFriendButton)=="function" then
+height=SocialPlus_UpdateFriendButton(button)
+else
+FG_Debug("SocialPlus_UpdateFriendButton missing at runtime; using fallback height for button",button.index)
+height=FRIENDS_BUTTON_HEIGHTS[button.buttonType] or 1
+end
 button:SetHeight(height)
 usedHeight=usedHeight+height
 else
@@ -1464,17 +1464,17 @@ end
 -- [[ Master update: builds FriendButtons + groups ]]
 
 local function SocialPlus_Update(forceUpdate)
-  -- Required core wrappers must be initialized before running a full update; if
-  -- they are missing, bail out early to avoid nil upvalue calls during load.
-  if type(FG_GetNumFriends)~="function" or type(FG_BNGetNumFriends)~="function" then
-    FG_Debug("SocialPlus_Update skipped: core FG_ wrappers not ready")
-    return
-  end
+-- Required core wrappers must be initialized before running a full update; if
+-- they are missing, bail out early to avoid nil upvalue calls during load.
+if type(FG_GetNumFriends)~="function" or type(FG_BNGetNumFriends)~="function" then
+FG_Debug("SocialPlus_Update skipped: core FG_ wrappers not ready")
+return
+end
 local numBNetTotal,numBNetOnline,numBNetFavorite,numBNetFavoriteOnline
 if type(FG_BNGetNumFriends)=="function" then
-  numBNetTotal,numBNetOnline,numBNetFavorite,numBNetFavoriteOnline=FG_BNGetNumFriends()
+numBNetTotal,numBNetOnline,numBNetFavorite,numBNetFavoriteOnline=FG_BNGetNumFriends()
 else
-  numBNetTotal,numBNetOnline,numBNetFavorite,numBNetFavoriteOnline=0,0,0,0
+numBNetTotal,numBNetOnline,numBNetFavorite,numBNetFavoriteOnline=0,0,0,0
 end
 numBNetFavorite=numBNetFavorite or 0
 numBNetFavoriteOnline=numBNetFavoriteOnline or 0
@@ -1482,14 +1482,14 @@ local numBNetOffline=numBNetTotal-numBNetOnline
 local numBNetFavoriteOffline=numBNetFavorite-numBNetFavoriteOnline
 local numWoWTotal,numWoWOnline
 if type(FG_GetNumFriends)=="function" then
-  numWoWTotal=FG_GetNumFriends()
+numWoWTotal=FG_GetNumFriends()
 else
-  numWoWTotal=0
+numWoWTotal=0
 end
 if type(FG_GetNumOnlineFriends)=="function" then
-  numWoWOnline=FG_GetNumOnlineFriends()
+numWoWOnline=FG_GetNumOnlineFriends()
 else
-  numWoWOnline=0
+numWoWOnline=0
 end
 local numWoWOffline=numWoWTotal-numWoWOnline
 
@@ -1835,10 +1835,10 @@ FriendButtons.count=index
 
 local selectedFriend=0
 if numBNetTotal+numWoWTotal>0 then
-    if FriendsFrame.selectedFriendType==FRIENDS_BUTTON_TYPE_WOW then
-      selectedFriend=(type(FG_GetSelectedFriend)=="function" and FG_GetSelectedFriend() or 0)
-    elseif FriendsFrame.selectedFriendType==FRIENDS_BUTTON_TYPE_BNET then
-      selectedFriend=(type(FG_BNGetSelectedFriend)=="function" and FG_BNGetSelectedFriend() or 0)
+if FriendsFrame.selectedFriendType==FRIENDS_BUTTON_TYPE_WOW then
+selectedFriend=(type(FG_GetSelectedFriend)=="function" and FG_GetSelectedFriend() or 0)
+elseif FriendsFrame.selectedFriendType==FRIENDS_BUTTON_TYPE_BNET then
+selectedFriend=(type(FG_BNGetSelectedFriend)=="function" and FG_BNGetSelectedFriend() or 0)
 end
 if not selectedFriend or selectedFriend==0 then
 FriendsFrame_SelectFriend(FriendButtons[1].buttonType,1)
@@ -1853,10 +1853,10 @@ FriendsFrame.selectedFriend=selectedFriend
 local showRIDWarning=false
 local numInvites2=(type(FG_BNGetNumFriendInvites)=="function" and FG_BNGetNumFriendInvites() or 0)
 if numInvites2>0 and not GetCVarBool("pendingInviteInfoShown") then
-  local _,_,_,_,_,_,isRIDEnabled=(type(FG_BNGetInfo)=="function" and (select(7,FG_BNGetInfo())) or false)
+local _,_,_,_,_,_,isRIDEnabled=(type(FG_BNGetInfo)=="function" and (select(7,FG_BNGetInfo())) or false)
 if isRIDEnabled then
 for i=1,numInvites2 do
-  local inviteID,accountName,isBattleTag=(type(FG_BNGetFriendInviteInfo)=="function" and (FG_BNGetFriendInviteInfo(i)) or (nil,nil,nil))
+local inviteID,accountName,isBattleTag=(type(FG_BNGetFriendInviteInfo)=="function" and (FG_BNGetFriendInviteInfo(i)) or (nil,nil,nil))
 if not isBattleTag then
 showRIDWarning=true
 break
@@ -2584,13 +2584,13 @@ info.disabled=not canInvite
 
 -- Show a tooltip with a localized reason when the invite is disabled
 if not canInvite then
-  local kind,id = SocialPlus_GetDropdownFriend()
-  local _,reason = SocialPlus_GetInviteStatus(kind,id)
-  local reasonText = reason or L.INVITE_GENERIC_FAIL
-  -- Red title (colored like the per-row tooltip) and red reason
-  info.tooltipTitle = "|cFFFF1A1A"..L.MENU_INVITE.."|r"
-  info.tooltipText = "|cFFFF4D4D"..reasonText.."|r"
-  info.tooltipOnButton = true
+local kind,id = SocialPlus_GetDropdownFriend()
+local _,reason = SocialPlus_GetInviteStatus(kind,id)
+local reasonText = reason or L.INVITE_GENERIC_FAIL
+-- Red title (colored like the per-row tooltip) and red reason
+info.tooltipTitle = "|cFFFF1A1A"..L.MENU_INVITE.."|r"
+info.tooltipText = "|cFFFF4D4D"..reasonText.."|r"
+info.tooltipOnButton = true
 end
 
 info.func=function()
