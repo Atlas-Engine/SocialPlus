@@ -1,19 +1,20 @@
 # SocialPlus
 
 A modern, MoP-Classic-ready enhancement to the Friends List — rebuilt to feel like Blizzard shipped it today.  
-Fast, organized, and clean, with zero taint issues and a fully native look.
+Fast, organized, fully bilingual (English + French), and clean, with zero taint issues and a native Blizzard look.
 
 ---
 
 ## ⭐ What SocialPlus Improves
 The default MoP Social panel was functional, but dated.  
-SocialPlus upgrades it with a smarter layout, better logic, and tools the game should have had from the start.
+SocialPlus upgrades it with a smarter layout, better logic, proper localization, and tools the game should have had from the start.
 
 - A **real search bar** that ignores accents and symbols.
 - **Reliable invites** for both BNet and in-game friends.
 - **Custom friend groups** that stay neatly organized.
 - Correct icons, spacing, and panel alignment.
 - Fully MoP-compatible code with no UI taint.
+- **Automatic English/French detection** — the entire addon translates itself to your WoW client’s language.
 
 Everything feels native — just way better.
 
@@ -24,7 +25,7 @@ Find anyone instantly.
 
 - Accent-insensitive text matching.
 - Updates in real time as you type.
-- Designed to be fast even with huge friend lists.
+- Designed to stay fast even with huge friend lists.
 
 ---
 
@@ -33,10 +34,10 @@ The invite button finally behaves like it should.
 
 - Cross-realm support works consistently.
 - Clear messages when invites aren’t possible.
-- Correct version checks for MoP Classic.
+- Correct checks for MoP version differences.
 - Unified logic for BNet and character-based friends.
 
-You’ll never guess whether an invite will fail again.
+No more guessing why an invite fails.
 
 ---
 
@@ -44,9 +45,9 @@ You’ll never guess whether an invite will fail again.
 Organize your list effortlessly.
 
 - Create, rename, and delete groups on the fly.
-- Assign friends to groups using simple note tags (`#GroupName`).
+- Assign friends using simple note tags (`#GroupName`).
 - Collapsible sections with online/offline counters.
-- Notes stay synced — no external data saved.
+- Notes stay synced — no external data files needed.
 
 Zero clutter. Maximum control.
 
@@ -55,25 +56,26 @@ Zero clutter. Maximum control.
 ## ⚙️ Lightweight Options
 Right-click any group header to toggle:
 
-- Hide offline characters
-- Hide max-level characters
-- Class-colored names
-- Group management tools
+- Hide offline characters  
+- Hide max-level characters  
+- Class-colored names  
+- Group management tools  
 
-All options are minimal and quick — no bulky panels.
+Minimal, quick, and unobtrusive.
 
 ---
 
 ## ✨ Quality of Life Improvements
 - Smoother, more responsive mouse-wheel scrolling.
-- Cleaner friend button layout.
+- Cleaner friend button layout with correct spacing.
+- Fully localized UI (English + French).
 - Stable behavior with large friend lists.
-- Modernized UI without altering Blizzard’s style.
+- Modernized functionality without touching Blizzard art assets.
 
 ---
 
 ## 🔧 MoP Fixes
-SocialPlus also corrects several expansion-specific issues:
+SocialPlus also resolves several MoP-specific quirks:
 
 - Fixed invite inconsistencies across realms and versions.
 - Corrected outdated restriction messages.
@@ -82,8 +84,8 @@ SocialPlus also corrects several expansion-specific issues:
 ---
 
 ## 🙏 Credits
-Inspired by the original **Mikeprod FriendGroups** addon  
-— reimagined and rebuilt for a modern MoP Classic experience.
+Inspired by the original **Mikeprod FriendGroups** addon —  
+reimagined and rebuilt for a modern MoP Classic experience.
 
 ---
 

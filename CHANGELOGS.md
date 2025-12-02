@@ -1,9 +1,18 @@
+### 1.0.5 — Full Localization Update
+- Added complete English + French localization using auto-detected client locale.
+- Localized every right-click menu option, group submenu, and settings toggle.
+- Localized all popups (rename group, create group, set note, copy name).
+- Localized “[no group]” header to display properly as “Ungrouped / Sans groupe”.
+- Localized “No groups” and “No groups to remove” messages in submenus.
+- Localized invite error messages for BNet players (wrong game, wrong version, no realm).
+- Improved internal consistency and removed the last remaining hardcoded English.
+- Minor cleanup of duplicate variable and header text alignment.
+
 ### 1.0.4 — 2025-12-01
 - Enhanced responsiveness when scrolling through large friend lists.
 - Minor internal cleanup to maintain code consistency and stability.
 
 ## [1.0.3] — 2025-12-01
-
 ### New Features
 - **Search Box Added**
   - Integrated a custom search input directly into the Friends Frame.

@@ -1,6 +1,138 @@
 local hooks = {}
 local SocialPlus_OriginalDropdownInit
 
+-----------------------------------------------------------------------
+-- Localization: English + French (auto-detected via GetLocale())
+-----------------------------------------------------------------------
+local L = {}
+do
+    local locale = GetLocale()
+
+    if locale == "frFR" then
+        -- General
+        L.ADDON_NAME              = "SocialPlus"
+
+        ----------------------------------------------------------------
+        -- Interaction Menu (right-click friend)
+        ----------------------------------------------------------------
+        L.MENU_INTERACT           = "Interagir"
+        L.MENU_WHISPER            = "Chuchoter"
+        L.MENU_INVITE             = "Inviter"
+        L.MENU_COPY_NAME          = "Copier le nom du personnage"
+
+        L.MENU_GROUPS             = "Groupes"
+        L.MENU_CREATE_GROUP       = "Créer un nouveau groupe"
+        L.MENU_ADD_TO_GROUP       = "Ajouter au groupe"
+        L.MENU_REMOVE_FROM_GROUP  = "Retirer du groupe"
+
+        L.MENU_OTHER_OPTIONS      = "Autres options"
+        L.MENU_SET_NOTE           = "Définir une note"
+        L.MENU_REMOVE_BNET        = "Retirer l’ami Bnet"
+
+        ----------------------------------------------------------------
+        -- Search & grouping
+        ----------------------------------------------------------------
+        L.SEARCH_PLACEHOLDER      = "Rechercher un ami..."
+        L.GROUP_UNGROUPED         = "Sans groupe"
+
+        ----------------------------------------------------------------
+        -- Group menu (header right-click)
+        ----------------------------------------------------------------
+        L.GROUP_INVITE_ALL        = "Inviter tout le groupe"
+        L.GROUP_RENAME            = "Renommer le groupe"
+        L.GROUP_REMOVE            = "Supprimer le groupe"
+        L.GROUP_SETTINGS          = "Paramètres"
+        L.GROUP_NO_GROUPS         = "Aucun groupe"
+        L.GROUP_NO_GROUPS_REMOVE  = "Aucun groupe à retirer"
+
+        ----------------------------------------------------------------
+        -- Settings toggles (group submenu)
+        ----------------------------------------------------------------
+        L.SETTING_HIDE_OFFLINE      = "Cacher les joueurs hors ligne"
+        L.SETTING_HIDE_MAX_LEVEL    = "Cacher les joueurs niveau max"
+        L.SETTING_COLOR_NAMES       = "Colorer les noms"
+
+        ----------------------------------------------------------------
+        -- Popup titles
+        ----------------------------------------------------------------
+        L.POPUP_RENAME_TITLE        = "Entrez un nouveau nom de groupe"
+        L.POPUP_CREATE_TITLE        = "Entrez un nouveau nom de groupe"
+        L.POPUP_NOTE_TITLE          = "Entrez une note pour cet ami"
+        L.POPUP_COPY_TITLE          = "Nom du personnage (Ctrl+C pour copier) :"
+
+        ----------------------------------------------------------------
+        -- Extra messages
+        ----------------------------------------------------------------
+        L.MSG_INVITE_FAILED       = "Invitation impossible pour ce contact."
+        L.MSG_INVITE_CROSSREALM   = "Invitation inter-royaume non disponible."
+        L.INVITE_REASON_NOT_WOW       = "Cet ami n’est pas actuellement dans World of Warcraft."
+        L.INVITE_REASON_WRONG_PROJECT = "Cet ami n’est pas sur votre version de WoW."
+        L.INVITE_REASON_NO_REALM      = "Vous ne pouvez pas inviter cet ami car son royaume n’est pas disponible (probablement une autre région)."
+
+	else
+        -- Default: English
+        L.ADDON_NAME              = "SocialPlus"
+
+        ----------------------------------------------------------------
+        -- Interaction Menu
+        ----------------------------------------------------------------
+        L.MENU_INTERACT           = "Interact"
+        L.MENU_WHISPER            = "Whisper"
+        L.MENU_INVITE             = "Invite"
+        L.MENU_COPY_NAME          = "Copy character name"
+
+        L.MENU_GROUPS             = "Groups"
+        L.MENU_CREATE_GROUP       = "Create new group"
+        L.MENU_ADD_TO_GROUP       = "Add to group"
+        L.MENU_REMOVE_FROM_GROUP  = "Remove from group"
+
+        L.MENU_OTHER_OPTIONS      = "Other Options"
+        L.MENU_SET_NOTE           = "Set note"
+        L.MENU_REMOVE_BNET        = "Remove Bnet friend"
+
+        ----------------------------------------------------------------
+        -- Search & grouping
+        ----------------------------------------------------------------
+        L.SEARCH_PLACEHOLDER      = "Search friends..."
+        L.GROUP_UNGROUPED         = "Ungrouped"
+
+        ----------------------------------------------------------------
+        -- Group menu (header right-click)
+        ----------------------------------------------------------------
+        L.GROUP_INVITE_ALL        = "Invite all to party"
+        L.GROUP_RENAME            = "Rename group"
+        L.GROUP_REMOVE            = "Remove group"
+        L.GROUP_SETTINGS          = "Settings"
+        L.GROUP_NO_GROUPS         = "No groups"
+        L.GROUP_NO_GROUPS_REMOVE  = "No groups to remove"
+
+        ----------------------------------------------------------------
+        -- Settings toggles (group submenu)
+        ----------------------------------------------------------------
+        L.SETTING_HIDE_OFFLINE      = "Hide all offline"
+        L.SETTING_HIDE_MAX_LEVEL    = "Hide max-level players"
+        L.SETTING_COLOR_NAMES       = "Colour names"
+
+        ----------------------------------------------------------------
+        -- Popup titles
+        ----------------------------------------------------------------
+        L.POPUP_RENAME_TITLE        = "Enter new group name"
+        L.POPUP_CREATE_TITLE        = "Enter new group name"
+        L.POPUP_NOTE_TITLE          = "Enter a note for this friend"
+        L.POPUP_COPY_TITLE          = "Character name (Ctrl+C to copy):"
+
+        ----------------------------------------------------------------
+        -- Extra messages
+        ----------------------------------------------------------------
+        L.MSG_INVITE_FAILED       = "Unable to invite this contact."
+        L.MSG_INVITE_CROSSREALM   = "Cross-realm invite is not available."
+        L.INVITE_REASON_NOT_WOW       = "This friend is not currently in World of Warcraft."
+        L.INVITE_REASON_WRONG_PROJECT = "This friend is not on your WoW version."
+        L.INVITE_REASON_NO_REALM      = "You cannot invite this friend because their realm is not available (likely another region)."
+
+	end
+end
+
 -- Debug helper to trace id resolution and menu actions (set FG_DEBUG = true to enable)
 local FG_DEBUG = false
 
@@ -168,14 +300,11 @@ SP_SearchGlowOuter=outer
 	-- Fixed, visible position near top-right
 	SP_SearchBox:SetSize(170,20)
 	SP_SearchBox:SetPoint("TOPRIGHT",FriendsFrame,"TOPRIGHT",-8,-63)
-
-	SP_SearchBox.Instructions:SetText(SEARCH or "Search")
-
+	SP_SearchBox.Instructions:SetText(L.SEARCH_PLACEHOLDER)
 	local font,size,flags=SP_SearchBox:GetFont()
 	SP_SearchBox:SetFont(font,size,flags)
 	SP_SearchBox:SetTextColor(1,1,1)
 	SP_SearchBox.Instructions:SetTextColor(0.8,0.8,0.8)
-
 	SP_SearchBox:SetScript("OnTextChanged",function(self)
     SearchBoxTemplate_OnTextChanged(self)
     local txt=self:GetText() or ""
@@ -294,10 +423,6 @@ else
 	FriendsScrollFrame=FriendsFrameFriendsScrollFrame
 	FriendButtonTemplate="FriendsFrameButtonTemplate"
 end
-
--- [[ Smooth scroll inertia (mouse wheel only) ]]
-
-local SP_ScrollAnim=nil
 
 -- [[ Smooth scroll inertia (adaptive, fast enough) ]]
 
@@ -940,17 +1065,18 @@ local function SocialPlus_UpdateFriendButton(button)
 			local fgReason=nil
 
 			if client~=BNET_CLIENT_WOW then
-				fgAllowed=false
-				fgReason="This friend is not currently in World of Warcraft."
+			fgAllowed=false
+			fgReason=L.INVITE_REASON_NOT_WOW
 			elseif WOW_PROJECT_ID and wowProjectID and wowProjectID~=WOW_PROJECT_ID then
-				fgAllowed=false
-				fgReason="This friend is not on your WoW version."
+			fgAllowed=false
+			fgReason=L.INVITE_REASON_WRONG_PROJECT
 			end
 
 			if fgAllowed and (not realmName or realmName=="") then
-				fgAllowed=false
-				fgReason="You cannot invite this friend because their realm is not available (likely another region)."
+			fgAllowed=false
+			fgReason=L.INVITE_REASON_NO_REALM
 			end
+
 
 			button.travelPassButton.fgInviteAllowed=fgAllowed
 			button.travelPassButton.fgInviteReason=fgReason
@@ -983,16 +1109,17 @@ local function SocialPlus_UpdateFriendButton(button)
 			pcall(FriendsFrame_SummonButton_Update,button.summonButton)
 		end
 
-	elseif button.buttonType==FRIENDS_BUTTON_TYPE_DIVIDER then
+		elseif button.buttonType==FRIENDS_BUTTON_TYPE_DIVIDER then
 		-- Group header row
-		local title
 		local group=FriendButtons[index].text
+		local title
 		if group=="" or not group then
-			title="[no group]"
+		title=L.GROUP_UNGROUPED
 		else
-			title=group
+		title=group
 		end
-		local counts="("..GroupOnline[group].."/"..GroupTotal[group]..")"
+		local counts="("..(GroupOnline[group] or 0).."/"..(GroupTotal[group] or 0)..")"
+
 
 		if button["text"] then
 			button.text:SetText(title)
@@ -1728,7 +1855,7 @@ end
 
 -- [[ Friend-note popup ]]
 StaticPopupDialogs["FRIEND_GROUP_RENAME"]={
-	text="Enter new group name",
+	text=L.POPUP_RENAME_TITLE,
 	button1=ACCEPT,
 	button2=CANCEL,
 	hasEditBox=1,
@@ -1745,7 +1872,7 @@ StaticPopupDialogs["FRIEND_GROUP_RENAME"]={
 
 -- [[ Friend-group create popup ]]
 StaticPopupDialogs["FRIEND_GROUP_CREATE"]={
-	text="Enter new group name",
+	text=L.POPUP_CREATE_TITLE,
 	button1=ACCEPT,
 	button2=CANCEL,
 	hasEditBox=1,
@@ -1761,7 +1888,7 @@ StaticPopupDialogs["FRIEND_GROUP_CREATE"]={
 
 -- [[ Friend-note popup ]]	
 StaticPopupDialogs["FRIEND_SET_NOTE"]={
-	text="Enter a note for this friend",
+	text=L.POPUP_NOTE_TITLE,
 	button1=ACCEPT,
 	button2=CANCEL,
 	hasEditBox=1,
@@ -1886,7 +2013,7 @@ end
 -- [[ Copy-character-name popup ]]
 
 StaticPopupDialogs["FRIEND_GROUP_COPY_NAME"]={
-    text="Character name (Ctrl+C to copy):",
+    text=L.POPUP_COPY_TITLE,
     button1=OKAY,
     button2=CANCEL,
     hasEditBox=1,
@@ -2002,15 +2129,16 @@ SocialPlus_Menu.displayMode="MENU"
 local menu_items={
 	[1]={
 		{text="",notCheckable=true,isTitle=true},
-		{text="Invite all to party",notCheckable=true,func=function(self,menu,clickedgroup) InviteOrGroup(clickedgroup,true) end},
-		{text="Rename group",notCheckable=true,func=function(self,menu,clickedgroup) StaticPopup_Show("FRIEND_GROUP_RENAME",nil,nil,clickedgroup) end},
-		{text="Remove group",notCheckable=true,func=function(self,menu,clickedgroup) InviteOrGroup(clickedgroup,false) end},
-		{text="Settings",notCheckable=true,hasArrow=true},
+		{text=L.GROUP_INVITE_ALL
+,notCheckable=true,func=function(self,menu,clickedgroup) InviteOrGroup(clickedgroup,true) end},
+		{text=L.GROUP_RENAME,notCheckable=true,func=function(self,menu,clickedgroup) StaticPopup_Show("FRIEND_GROUP_RENAME",nil,nil,clickedgroup) end},
+		{text=L.GROUP_REMOVE,notCheckable=true,func=function(self,menu,clickedgroup) InviteOrGroup(clickedgroup,false) end},
+		{text=L.GROUP_SETTINGS,notCheckable=true,hasArrow=true},
 	},
 	[2]={
-		{text="Hide all offline",checked=function() return SocialPlus_SavedVars.hide_offline end,func=function() CloseDropDownMenus() SocialPlus_SavedVars.hide_offline=not SocialPlus_SavedVars.hide_offline SocialPlus_Update() end},
-		{text="Hide level of max level players",checked=function() return SocialPlus_SavedVars.hide_high_level end,func=function() CloseDropDownMenus() SocialPlus_SavedVars.hide_high_level=not SocialPlus_SavedVars.hide_high_level SocialPlus_Update() end},
-		{text="Colour names",checked=function() return SocialPlus_SavedVars.colour_classes end,func=function() CloseDropDownMenus() SocialPlus_SavedVars.colour_classes=not SocialPlus_SavedVars.colour_classes SocialPlus_Update() end},
+		{text=L.SETTING_HIDE_OFFLINE,checked=function() return SocialPlus_SavedVars.hide_offline end,func=function() CloseDropDownMenus() SocialPlus_SavedVars.hide_offline=not SocialPlus_SavedVars.hide_offline SocialPlus_Update() end},
+		{text=L.SETTING_HIDE_MAX_LEVEL,checked=function() return SocialPlus_SavedVars.hide_high_level end,func=function() CloseDropDownMenus() SocialPlus_SavedVars.hide_high_level=not SocialPlus_SavedVars.hide_high_level SocialPlus_Update() end},
+		{text=L.SETTING_COLOR_NAMES,checked=function() return SocialPlus_SavedVars.colour_classes end,func=function() CloseDropDownMenus() SocialPlus_SavedVars.colour_classes=not SocialPlus_SavedVars.colour_classes SocialPlus_Update() end},
 	},
 }
 
@@ -2026,7 +2154,7 @@ SocialPlus_Menu.initialize=function(self,level)
 
 		for prop,value in pairs(items) do
 			-- Replace empty text with the current group label
-			info[prop]=value~="" and value or (groupKey~="" and groupKey or "[no group]")
+			info[prop]=value~="" and value or (groupKey~="" and groupKey or L.GROUP_UNGROUPED)
 		end
 
 		info.arg1=groupKey
@@ -2034,9 +2162,9 @@ SocialPlus_Menu.initialize=function(self,level)
 
 		-- When right-clicking [no group], only "Settings" should be usable
 		if level==1 and isNoGroup then
-			if info.text=="Invite all to party"
-				or info.text=="Rename group"
-				or info.text=="Remove group" then
+			if info.text==L.GROUP_INVITE_ALL
+				or info.text==L.GROUP_RENAME
+				or info.text==L.GROUP_REMOVE then
 				info.disabled=true
 			end
 		end
@@ -2044,7 +2172,6 @@ SocialPlus_Menu.initialize=function(self,level)
 		UIDropDownMenu_AddButton(info,level)
 	end
 end
-
 
 -- [[ Friend (row) right-click menu state ]]
 
@@ -2213,7 +2340,7 @@ SocialPlus_FriendMenu.initialize=function(self,level)
 		SocialPlus_AddSeparator(level)
 
 		info=UIDropDownMenu_CreateInfo()
-		info.text="Interact"
+		info.text=L.MENU_INTERACT
 		info.isTitle=true
 		info.notCheckable=true
 		info.disabled=true
@@ -2221,7 +2348,7 @@ SocialPlus_FriendMenu.initialize=function(self,level)
 
 		-- Whisper
 		info=UIDropDownMenu_CreateInfo()
-		info.text=WHISPER or "Whisper"
+		info.text=L.MENU_WHISPER
 		info.notCheckable=true
 		info.func=function()
 			local cf=SocialPlus_CurrentFriend
@@ -2277,7 +2404,7 @@ SocialPlus_FriendMenu.initialize=function(self,level)
 
 		-- Invite
 		info=UIDropDownMenu_CreateInfo()
-		info.text=INVITE or "Invite"
+		info.text=L.MENU_INVITE
 		info.notCheckable=true
 
 		local canInvite=SocialPlus_CanInviteMenuTarget()
@@ -2313,7 +2440,7 @@ SocialPlus_FriendMenu.initialize=function(self,level)
 
 		-- Copy character name
 		info=UIDropDownMenu_CreateInfo()
-		info.text="Copy character name"
+		info.text=L.MENU_COPY_NAME
 		info.notCheckable=true
 
 		local canCopy=SocialPlus_CanCopyCharName()
@@ -2333,7 +2460,7 @@ SocialPlus_FriendMenu.initialize=function(self,level)
 		SocialPlus_AddSeparator(level)
 
 		info=UIDropDownMenu_CreateInfo()
-		info.text="Groups"
+		info.text=L.MENU_GROUPS
 		info.isTitle=true
 		info.notCheckable=true
 		info.disabled=true
@@ -2341,14 +2468,14 @@ SocialPlus_FriendMenu.initialize=function(self,level)
 
 		local hasGroup=SocialPlus_DropdownFriendHasGroup()
 		info=UIDropDownMenu_CreateInfo()
-		info.text="Create new group"
+		info.text=L.MENU_CREATE_GROUP
 		info.notCheckable=true
 		info.disabled=hasGroup
 		info.func=SocialPlus_CreateGroupFromDropdown
 		UIDropDownMenu_AddButton(info,level)
 
 		info=UIDropDownMenu_CreateInfo()
-		info.text="Add to group"
+		info.text=L.MENU_ADD_TO_GROUP
 		info.notCheckable=true
 		info.hasArrow=true
 		info.value="FRIEND_GROUP_ADD_SUB"
@@ -2356,7 +2483,7 @@ SocialPlus_FriendMenu.initialize=function(self,level)
 		UIDropDownMenu_AddButton(info,level)
 
 		info=UIDropDownMenu_CreateInfo()
-		info.text="Remove from group"
+		info.text=L.MENU_REMOVE_FROM_GROUP
 		info.notCheckable=true
 		info.hasArrow=true
 		info.value="FRIEND_GROUP_DEL_SUB"
@@ -2365,14 +2492,14 @@ SocialPlus_FriendMenu.initialize=function(self,level)
 		SocialPlus_AddSeparator(level)
 
 		info=UIDropDownMenu_CreateInfo()
-		info.text="Other Options"
+		info.text=L.MENU_OTHER_OPTIONS
 		info.isTitle=true
 		info.notCheckable=true
 		info.disabled=true
 		UIDropDownMenu_AddButton(info,level)
 
 		info=UIDropDownMenu_CreateInfo()
-		info.text="Set note"
+		info.text=L.MENU_SET_NOTE
 		info.notCheckable=true
 		info.func=function()
 			local kind,id,note,setter=SocialPlus_GetDropdownFriendNote()
@@ -2387,9 +2514,9 @@ SocialPlus_FriendMenu.initialize=function(self,level)
 			SocialPlus_RemoveCurrentFriend()
 		end
 		if cf and cf.buttonType==FRIENDS_BUTTON_TYPE_BNET then
-			info.text="Remove Bnet friend"
+			info.text=L.MENU_REMOVE_BNET
 		else
-			info.text="Remove friend"
+			info.text=REMOVE_FRIEND
 		end
 		UIDropDownMenu_AddButton(info,level)
 
@@ -2779,13 +2906,14 @@ function SocialPlus_BuildGroupSubmenu(mode,level)
 	table.sort(choices)
 
 	local info=UIDropDownMenu_CreateInfo()
-	if #choices==0 then
-		info.text=(mode=="ADD") and "No groups" or "No groups to remove"
+		if #choices==0 then
+		info.text=(mode=="ADD") and L.GROUP_NO_GROUPS or L.GROUP_NO_GROUPS_REMOVE
 		info.notCheckable=true
 		info.disabled=true
 		UIDropDownMenu_AddButton(info,level)
 		return
 	end
+
 
 	for _,group in ipairs(choices) do
 		info=UIDropDownMenu_CreateInfo()
