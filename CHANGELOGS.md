@@ -1,3 +1,7 @@
+### 1.0.4 — 2025-12-01
+- Enhanced responsiveness when scrolling through large friend lists.
+- Minor internal cleanup to maintain code consistency and stability.
+
 ## [1.0.3] — 2025-12-01
 
 ### New Features

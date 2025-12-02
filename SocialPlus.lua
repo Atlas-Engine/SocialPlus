@@ -136,6 +136,35 @@ local function SP_CreateSearchBox()
 	SP_SearchBox=CreateFrame("EditBox","SocialPlusSearchBox",FriendsFrame,"SearchBoxTemplate")
 	SP_SearchBox:SetAutoFocus(false)
 
+		-- Subtle neon glow around the search box
+	local glow=CreateFrame("Frame",nil,SP_SearchBox,"BackdropTemplate")
+	glow:SetFrameLevel(SP_SearchBox:GetFrameLevel()+2)
+	glow:SetPoint("TOPLEFT",SP_SearchBox,-4,-1)
+	glow:SetPoint("BOTTOMRIGHT",SP_SearchBox,-1,1)
+	glow:SetBackdrop({
+	edgeFile="Interface\\Buttons\\WHITE8x8",
+	edgeSize=1.5, -- thinner neon line
+	})
+	glow:SetBackdropBorderColor(0,0.65,1,0.7) -- softer, muted neon
+	glow:Hide()
+
+	-- Soft bloom (very subtle)
+	local outer=CreateFrame("Frame",nil,glow,"BackdropTemplate")
+	outer:SetFrameLevel(glow:GetFrameLevel()-1)
+	outer:SetPoint("TOPLEFT",glow,-1,1)
+	outer:SetPoint("BOTTOMRIGHT",glow,1,-1)
+	outer:SetBackdrop({
+	edgeFile="Interface\\Buttons\\WHITE8x8",
+	edgeSize=5, -- small bloom
+})
+outer:SetBackdropBorderColor(0,0.5,1,0.15) -- light glow, barely there
+outer:Hide()
+
+SP_SearchGlow=glow
+SP_SearchGlowOuter=outer
+
+
+
 	-- Fixed, visible position near top-right
 	SP_SearchBox:SetSize(170,20)
 	SP_SearchBox:SetPoint("TOPRIGHT",FriendsFrame,"TOPRIGHT",-8,-63)
@@ -148,26 +177,42 @@ local function SP_CreateSearchBox()
 	SP_SearchBox.Instructions:SetTextColor(0.8,0.8,0.8)
 
 	SP_SearchBox:SetScript("OnTextChanged",function(self)
-		SearchBoxTemplate_OnTextChanged(self)
-		local txt=self:GetText() or ""
-		txt=txt:match("^%s*(.-)%s*$") or ""
+    SearchBoxTemplate_OnTextChanged(self)
+    local txt=self:GetText() or ""
+    txt=txt:match("^%s*(.-)%s*$") or ""
 
-		local norm=SP_NormalizeText(txt)
-		if norm=="" then
-			SP_SearchTerm=nil
-		else
-			SP_SearchTerm=norm  -- already normalized (lowercase, no accents, no symbols)
-		end
+    local norm=SP_NormalizeText(txt)
+    if norm=="" then
+        SP_SearchTerm=nil
+    else
+        SP_SearchTerm=norm  -- already normalized (lowercase, no accents, no symbols)
+    end	
+        if SP_SearchGlow then
+	if SP_SearchTerm then
+		SP_SearchGlow:Show()
+		if SP_SearchGlowOuter then SP_SearchGlowOuter:Show() end
+	else
+		SP_SearchGlow:Hide()
+		if SP_SearchGlowOuter then SP_SearchGlowOuter:Hide() end
+	end
+	end
 
-		FriendsList_Update()
+
+    FriendsList_Update()
 	end)
+
+
 
 	SP_SearchBox:SetScript("OnEscapePressed",function(self)
-		self:SetText("")
-		self:ClearFocus()
-		SP_SearchTerm=nil
-		FriendsList_Update()
+    self:SetText("")
+    self:ClearFocus()
+    SP_SearchTerm=nil
+    if SP_SearchGlow then
+        SP_SearchGlow:Hide()
+    end
+    FriendsList_Update()
 	end)
+
 end
 
 -- Ensure it’s created when the UI is ready
@@ -177,6 +222,7 @@ SP_SearchFrame:RegisterEvent("ADDON_LOADED")
 SP_SearchFrame:SetScript("OnEvent",function(_,event,addon)
 	if event=="PLAYER_LOGIN" or addon=="Blizzard_FriendsFrame" then
 		SP_CreateSearchBox()
+		SP_InitSmoothScroll()
 	end
 end)
 
@@ -247,6 +293,74 @@ if FriendsListFrameScrollFrame then
 else
 	FriendsScrollFrame=FriendsFrameFriendsScrollFrame
 	FriendButtonTemplate="FriendsFrameButtonTemplate"
+end
+
+-- [[ Smooth scroll inertia (mouse wheel only) ]]
+
+local SP_ScrollAnim=nil
+
+-- [[ Smooth scroll inertia (adaptive, fast enough) ]]
+
+local SP_ScrollAnim=nil
+
+local function SP_ScrollOnUpdate(self,elapsed)
+	if not SP_ScrollAnim or not SP_ScrollAnim.scrollBar then
+		SP_ScrollAnim=nil
+		self:SetScript("OnUpdate",nil)
+		return
+	end
+
+	local a=SP_ScrollAnim
+	a.t=a.t+elapsed
+	local d=a.duration
+
+	if a.t>=d then
+		a.scrollBar:SetValue(a.to)
+		SP_ScrollAnim=nil
+		self:SetScript("OnUpdate",nil)
+		return
+	end
+
+	-- Ease-out
+	local x=a.t/d
+	local alpha=1-(1-x)*(1-x)*(1-x)*(1-x)
+
+	local value=a.from+(a.to-a.from)*alpha
+	a.scrollBar:SetValue(value)
+end
+
+function SP_InitSmoothScroll()
+	local frame=FriendsScrollFrame
+	if not frame or not frame.scrollBar then return end
+
+	frame:EnableMouseWheel(true)
+
+	frame:SetScript("OnMouseWheel",function(self,delta)
+		local sb=self.scrollBar
+		if not sb then return end
+
+		local min,max=sb:GetMinMaxValues()
+		local current=sb:GetValue() or 0
+		local range=max-min
+
+		-- Adaptive step: about 8–10 wheel ticks from top to bottom
+		local baseStep=(range>0) and (range/14) or 40
+
+		local target=current-delta*baseStep
+		if target<min then target=min end
+		if target>max then target=max end
+		if target==current then return end
+
+		SP_ScrollAnim={
+			scrollBar=sb,
+			from=current,
+			to=target,
+			t=0,
+			duration=0.10, -- short, snappy
+		}
+
+		self:SetScript("OnUpdate",SP_ScrollOnUpdate)
+	end)
 end
 
 -- [[ Friend API wrappers (MoP / modern compatibility) ]]
@@ -1779,6 +1893,9 @@ StaticPopupDialogs["FRIEND_GROUP_COPY_NAME"]={
 
     OnShow=function(self,data)
         local eb=self.editBox or self.EditBox
+        if eb then
+            eb:SetMaxLetters(64) -- allow full Character-Realm
+        end
         if eb and data and data.name then
             eb:SetText(data.name)
             eb:HighlightText()
@@ -1796,7 +1913,6 @@ StaticPopupDialogs["FRIEND_GROUP_COPY_NAME"]={
                 if IsControlKeyDown() and (key=="C" or key=="c") then
                     local popup=editBox:GetParent()
                     if popup and popup.Hide then
-                        -- delay ensures clipboard receives the copied text
                         C_Timer.After(0.08,function()
                             popup:Hide()
                         end)
