@@ -69,6 +69,67 @@ do
         L.INVITE_REASON_WRONG_PROJECT = "Cet ami n’est pas sur votre version de WoW."
         L.INVITE_REASON_NO_REALM      = "Vous ne pouvez pas inviter cet ami car son royaume n’est pas disponible (probablement une autre région)."
 
+		if locale == "ruRU" then
+		-- General
+        L.ADDON_NAME              = "SocialPlus"
+
+        ----------------------------------------------------------------
+        -- Interaction Menu
+        ----------------------------------------------------------------
+        L.MENU_INTERACT           = "Взаимодействие"
+        L.MENU_WHISPER            = "Шёпот"
+        L.MENU_INVITE             = "Пригласить"
+        L.MENU_COPY_NAME          = "Скопировать имя персонажа"
+
+        L.MENU_GROUPS             = "Группы"
+        L.MENU_CREATE_GROUP       = "Создать новую группу"
+        L.MENU_ADD_TO_GROUP       = "Добавить в группу"
+        L.MENU_REMOVE_FROM_GROUP  = "Удалить из группы"
+
+        L.MENU_OTHER_OPTIONS      = "Другие настройки"
+        L.MENU_SET_NOTE           = "Примечание"
+        L.MENU_REMOVE_BNET        = "Удалить друга из Bnet"
+
+        ----------------------------------------------------------------
+        -- Search & grouping
+        ----------------------------------------------------------------
+        L.SEARCH_PLACEHOLDER      = "Поиск друзей..."
+        L.GROUP_UNGROUPED         = "Разгруппировано"
+
+        ----------------------------------------------------------------
+        -- Group menu (header right-click)
+        ----------------------------------------------------------------
+        L.GROUP_INVITE_ALL        = "Пригласить всех в группу"
+        L.GROUP_RENAME            = "Переименовать группу"
+        L.GROUP_REMOVE            = "Удалить группу"
+        L.GROUP_SETTINGS          = "Настройки"
+        L.GROUP_NO_GROUPS         = "Нет групп"
+        L.GROUP_NO_GROUPS_REMOVE  = "Нет групп для удаления"
+
+        ----------------------------------------------------------------
+        -- Settings toggles (group submenu)
+        ----------------------------------------------------------------
+        L.SETTING_HIDE_OFFLINE      = "Скрыть всех, кто 'Не в сети'"
+        L.SETTING_HIDE_MAX_LEVEL    = "Скрыть игроков макс. уровня"
+        L.SETTING_COLOR_NAMES       = "Цвет имён"
+
+        ----------------------------------------------------------------
+        -- Popup titles
+        ----------------------------------------------------------------
+        L.POPUP_RENAME_TITLE        = "Введите новое имя группы"
+        L.POPUP_CREATE_TITLE        = "Введите новое имя группы"
+        L.POPUP_NOTE_TITLE          = "Введите заметку для этого друга"
+        L.POPUP_COPY_TITLE          = "Имя персонажа (Ctrl+C для копирования):"
+
+        ----------------------------------------------------------------
+        -- Extra messages
+        ----------------------------------------------------------------
+        L.MSG_INVITE_FAILED       = "Невозможно пригласить этого персонажа."
+        L.MSG_INVITE_CROSSREALM   = "Приглашение между игровыми мирами недоступно."
+        L.INVITE_REASON_NOT_WOW       = "Этот друг в настоящее время не в WoW."
+        L.INVITE_REASON_WRONG_PROJECT = "Этого друга нет в вашей версии WoW."
+        L.INVITE_REASON_NO_REALM      = "Вы не можете пригласить этого друга, так как его игровой мир недоступен (вероятно, другой регион)."
+
 	else
         -- Default: English
         L.ADDON_NAME              = "SocialPlus"
