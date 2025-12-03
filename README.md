@@ -42,7 +42,6 @@ SocialPlus is a modern upgrade of the MoP-Classic Friends List, built on top of 
 
 🚀 Cross-Realm Fix  
 • You can now reliably invite friends playing on **other realms** directly from the Friends List.  
-• Works for MoP WoW friends and Battle.net WoW clients.  
 • Gives clear error messages when an invite is blocked.
 
 📦 INSTALLATION  
@@ -98,7 +97,6 @@ SocialPlus modernise la liste d’amis de MoP-Classic, basé sur l’addon Frien
 
 🚀 Correctif Cross-Realm  
 • Vous pouvez maintenant inviter correctement les amis d’autres royaumes depuis la liste d’amis.  
-• Fonctionne pour les amis WoW MoP et les amis Battle.net.  
 • Affiche un message clair si l’invitation est impossible.
 
 📦 INSTALLATION  
