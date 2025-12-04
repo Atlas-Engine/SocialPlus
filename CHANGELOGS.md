@@ -1,71 +1,85 @@
-v1.0.8 – Major UI polish, new filters, and full Blizzard-style integration
+# SocialPlus v1.0.9 — Changelog / Journal des modifications
 
-• Added a Blizzard-style Settings cogwheel button with hover glow, pressed animation, and proper frame border.
-• Added a fully redesigned Settings Panel using a dark stone Warcraft background identical to the Friends Panel.
-• Added a red X close button inside the settings panel.
-• Added a new toggle: “Prioritize MoP Friends” — automatically moves MoP Classic friends to the top of the General list (except those already in custom groups).
-• Improved friend sorting: prioritization only affects the ungrouped section, preserving all custom friend groups.
-• Search box + settings cog now automatically hide when switching to the Who / Raid tabs.
-• Search box now resets when switching tabs to avoid stuck filters.
-• Adjusted settings panel height, slider position, and spacing for a cleaner modern look.
-• Polish pass on the search bar visuals and text alignment.
-• Cleaned, reorganized, and optimized several UI update functions for stability and clarity.
+────────────────────────────────────
+🇺🇸 **English**
+────────────────────────────────────
 
+### 🚀 New Features
+- Intelligent Invite/Suggest system:
+  - Automatically switches between **Invite** and **Suggest Invite** depending on group leadership.
+  - Suggest Invite triggers when the player is grouped but not leader.
+  - Fully mirrors Blizzard’s travel-pass behavior, including cross-realm logic.
 
-### Improved
-• Scroll engine now uses SavedVars for per-account preferences
-• Popup redesigned into a clean, compact custom dialog
-• Removed Blizzard Low/High slider labels to avoid duplicates
+### ✨ Drag-and-Drop Group Management
+- **Group Reordering**
+  - You can now freely reorder groups by dragging a group header and dropping it above/below others.
+  - Order saves automatically and persists between sessions.
+- **Ghost Preview**
+  - While dragging, a smooth translucent “ghost” window follows the cursor.
+  - Displays the group name and up to five members.
+  - Clean, modern design with subtle blue transparency.
+- **Sorting Reset Option**
+  - New “**Reinitialize groups (A-Z)**” option in the group header right-click menu.
+  - Instantly resets all groups to alphabetical order.
+- **Improved UX**
+  - Drag visuals are clean and unobtrusive.
+  - Group headers stay visually stable during drag operations.
 
-### Fixed
-• Corrected menu syntax issues when adding Scroll Speed option
-• Ensured slider frame displays with proper size and anchoring
+### 🎯 Improved Eligibility Logic
+- BNet invite logic rewritten using Blizzard’s `canCoop` flag for accurate cross-realm/faction handling.
+- Correct faction recognition for WoW and Battle.net friends.
+- Faction icons (Alliance/Horde) restored even when realm data is missing.
+- Tooltip logic now matches Invite/Suggest state precisely.
 
-v1.0.7
-- Fixed inconsistent mousewheel scrolling on accounts with smaller friend lists.
-- Added minimum scroll-step logic to ensure smooth scrolling across all regions.
+### 🎨 UI Behavior Enhancements
+- Invite/Suggest labels dynamically update on all right-click menus.
+- All invite actions now route through the travel-pass button for perfect consistency.
+- Cleaned icon behavior and alignment across all friend types.
 
-v1.0.6 – SocialPlus Friends Overhaul
+### ⚙ Stability & Consistency
+- Cross-realm invites now consistent across all UI entry points.
+- Better group-leader detection.
+- Reduced edge-case failures thanks to unified invite execution.
 
-• ✨ New accent-insensitive search bar
-  - Instant, live filtering on your friend list.
-  - Handles accents and symbols (é/è/ç/ß etc.) for easier name searching.
-  - Subtle neon glow when search is active.
+────────────────────────────────────
+🇫🇷 **Français**
+────────────────────────────────────
 
-• 🌀 Smooth mousewheel scrolling
-  - Replaces chunky default scrolling with a fast, smooth ease-out animation.
-  - Tuned for ~8–10 wheel steps from top to bottom, even with large friend lists.
+### 🚀 Nouvelles fonctionnalités
+- Système intelligent d’Invitation/Suggestion :
+  - Bascule automatique entre **Inviter** et **Suggérer une invitation** selon le statut de chef de groupe.
+  - “Suggérer une invitation” s’active lorsque le joueur est en groupe sans en être le chef.
+  - Logique interne identique au bouton d’invitation de Blizzard, incluant la gestion inter-royaumes.
 
-• 📂 Modern friend context menu (right-click rows)
-  - Clean “Actions / Groups / Other options” structure.
-  - Quick Whisper and Invite for both WoW and Battle.net friends.
-  - Uses safe MoP-Classic-compatible hooks to prevent taint.
+### ✨ Gestion des groupes par glisser-déposer
+- **Réorganisation des groupes**
+  - Les groupes peuvent maintenant être réorganisés librement via glisser-déposer.
+  - L’ordre est sauvegardé automatiquement et persiste entre les sessions.
+- **Aperçu fantôme**
+  - Une fenêtre “fantôme” semi-transparente suit le curseur pendant le déplacement.
+  - Affiche le nom du groupe et jusqu’à cinq membres.
+  - Design propre, moderne, avec transparence bleutée.
+- **Option de réinitialisation**
+  - Nouvelle option « **Réinitialiser groupes (A-Z)** » dans le menu contextuel des groupes.
+  - Réinitialise instantanément l’ordre alphabétique des groupes.
+- **Ergonomie améliorée**
+  - Visuels de glisser-déposer nets et discrets.
+  - Les entêtes de groupe ne sont plus altérées pendant les déplacements.
 
-• 🧾 Copy Character Name
-  - New option: “Copy character name”.
-  - Popup shows full Name-Realm and auto-highlights the text.
-  - Press Ctrl+C to copy; popup auto-closes immediately after.
+### 🎯 Logique d’éligibilité améliorée
+- Vérification d’éligibilité Battle.net réécrite avec le drapeau `canCoop` de Blizzard.
+- Détection correcte de la faction pour les amis WoW et BNet.
+- Icônes de faction restaurées même sans données de royaume.
+- Info-bulles synchronisées avec l’état Invitation/Suggestion.
 
-• 👥 Group quality-of-life improvements
-  - Group header right-click menu: Invite all, Rename group, Remove group, Settings.
-  - Protective behavior: the default “General” bucket avoids mass-invite/mass-remove.
-  - Group-wide invites only affect friends who are online in WoW.
+### 🎨 Améliorations UI
+- Libellés Invitation/Suggestion mis à jour dynamiquement dans tous les menus contextuels.
+- Toutes les invitations utilisent désormais le bouton d’invitation Blizzard pour une cohérence parfaite.
+- Meilleure gestion des icônes et alignements.
 
-• ⚙️ Group Settings
-  - Hide offline friends.
-  - Hide max-level players.
-  - Toggle class-colored names (safe Classic-compatible Shaman color override included).
+### ⚙ Stabilité & cohérence
+- Invitations inter-royaumes fiables dans toute l’interface.
+- Détection améliorée du chef de groupe.
+- Moins d’erreurs grâce à une logique d’invitation centralisée.
 
-• 🌐 Full EN/FR localization pass
-  - All menu items, tooltips, and popups fully translated.
-  - Clean, modern phrasing in both languages.
-
-• 🛡️ Safer invites & removals
-  - Invite checks ensure friend is online, in WoW, on matching project, and has a valid realm.
-  - Tooltip explanations for invite failures.
-  - Battle.net removal uses confirmation popup with keyword and fallback API safety.
-
-• 🔧 Code cleanup & compatibility
-  - Unified Classic vs Retail friend/BNet API wrappers.
-  - Removed outdated hooks that caused UI taint.
-  - Centralized debug logging with FG_DEBUG flag.
+────────────────────────────────────

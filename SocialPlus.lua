@@ -18,13 +18,12 @@ do
         L.MENU_INTERACT           = "Interagir"
         L.MENU_WHISPER            = "Chuchoter"
         L.MENU_INVITE             = "Inviter"
-        L.MENU_COPY_NAME          = "Copier le nom du personnage"
-
+        L.MENU_SUGGEST           = "Suggérer une invitation"
+		L.MENU_COPY_NAME          = "Copier le nom du personnage"
         L.MENU_GROUPS             = "Groupes"
         L.MENU_CREATE_GROUP       = "Créer un groupe"
         L.MENU_ADD_TO_GROUP       = "Ajouter au groupe"
         L.MENU_REMOVE_FROM_GROUP  = "Retirer du groupe"
-
         L.MENU_OTHER_OPTIONS      = "Autres options"
         L.MENU_SET_NOTE           = "Définir une note"
         L.MENU_REMOVE_BNET        = "Retirer l’ami Bnet"
@@ -44,8 +43,9 @@ do
         L.GROUP_SETTINGS          = "Paramètres"
         L.GROUP_NO_GROUPS         = "Aucun groupe"
         L.GROUP_NO_GROUPS_REMOVE  = "Aucun groupe à retirer"
+        L.GROUP_REORDER_AZ        = "Réinitialiser les groupes (A-Z)"
 
-        ----------------------------------------------------------------
+		----------------------------------------------------------------
         -- Settings toggles (group submenu)
         ----------------------------------------------------------------
         L.SETTING_HIDE_OFFLINE      = "Masquer les hors ligne."
@@ -86,13 +86,12 @@ do
         L.MENU_INTERACT           = "Interact"
         L.MENU_WHISPER            = "Whisper"
         L.MENU_INVITE             = "Invite"
-        L.MENU_COPY_NAME          = "Copy character name"
-
+        L.MENU_SUGGEST           = "Suggest invite"
+		L.MENU_COPY_NAME          = "Copy character name"
         L.MENU_GROUPS             = "Groups"
         L.MENU_CREATE_GROUP       = "Create group"
         L.MENU_ADD_TO_GROUP       = "Add to group"
         L.MENU_REMOVE_FROM_GROUP  = "Remove from group"
-
         L.MENU_OTHER_OPTIONS      = "Other Options"
         L.MENU_SET_NOTE           = "Set note"
         L.MENU_REMOVE_BNET        = "Remove Bnet friend"
@@ -112,8 +111,9 @@ do
         L.GROUP_SETTINGS          = "Settings"
         L.GROUP_NO_GROUPS         = "No groups"
         L.GROUP_NO_GROUPS_REMOVE  = "No groups to remove"
+        L.GROUP_REORDER_AZ        = "Reinitialize groups (A-Z)"
 
-        ----------------------------------------------------------------
+		----------------------------------------------------------------
         -- Settings toggles
         ----------------------------------------------------------------
         L.SETTING_HIDE_OFFLINE      = "Hide offline."
@@ -165,6 +165,8 @@ local function FG_Debug(...)
 	end
 end
 
+
+-- Handle drag stop: determine target group and reorder	
 local function Hook(source,target,secure)
 	-- MoP Classic: skip hooking UnitPopup_* entirely; its implementation differs from modern retail
 	if source=="UnitPopup_ShowMenu" or source=="UnitPopup_OnClick" or source=="UnitPopup_HideButtons" then
@@ -187,17 +189,51 @@ local SocialPlus_NAME_COLOR=NORMAL_FONT_COLOR
 
 -- Forward declaration for invite helper so early functions can reference it
 local SocialPlus_GetInviteStatus
+local SocialPlus_GetGroupKeyFromRow
 local SocialPlus_EnsureSavedVars
+local SocialPlus_SetCustomGroupOrderFromMove
 
 -- Ensure savedvars exist and set reasonable defaults
 function SocialPlus_EnsureSavedVars()
-	SocialPlus_SavedVars = SocialPlus_SavedVars or {}
-	if SocialPlus_SavedVars.hide_offline == nil then SocialPlus_SavedVars.hide_offline = false end
-	if SocialPlus_SavedVars.hide_high_level == nil then SocialPlus_SavedVars.hide_high_level = false end
-	if SocialPlus_SavedVars.colour_classes == nil then SocialPlus_SavedVars.colour_classes = true end
-	if SocialPlus_SavedVars.scrollSpeed == nil then SocialPlus_SavedVars.scrollSpeed = SCROLL_BASE end
-    if SocialPlus_SavedVars.prioritize_current_client == nil then SocialPlus_SavedVars.prioritize_current_client = false end
-	SocialPlus_SavedVars.collapsed = SocialPlus_SavedVars.collapsed or {}
+    SocialPlus_SavedVars=SocialPlus_SavedVars or {}
+    if SocialPlus_SavedVars.hide_offline==nil then SocialPlus_SavedVars.hide_offline=false end
+    if SocialPlus_SavedVars.hide_high_level==nil then SocialPlus_SavedVars.hide_high_level=false end
+    if SocialPlus_SavedVars.colour_classes==nil then SocialPlus_SavedVars.colour_classes=true end
+    if SocialPlus_SavedVars.scrollSpeed==nil then SocialPlus_SavedVars.scrollSpeed=SCROLL_BASE end
+    if SocialPlus_SavedVars.prioritize_current_client==nil then SocialPlus_SavedVars.prioritize_current_client=false end
+    SocialPlus_SavedVars.collapsed=SocialPlus_SavedVars.collapsed or {}
+    SocialPlus_SavedVars.groupOrder=SocialPlus_SavedVars.groupOrder or {}
+end
+
+-- Group / leader helpers
+local function SocialPlus_IsPlayerInGroup()
+	if IsInGroup and IsInGroup() then
+		return true
+	end
+	if GetNumPartyMembers and GetNumPartyMembers()>0 then
+		return true
+	end
+	if GetNumRaidMembers and GetNumRaidMembers()>0 then
+		return true
+	end
+	return false
+end
+
+local function SocialPlus_IsPlayerGroupLeader()
+	if UnitIsGroupLeader and UnitIsGroupLeader("player") then
+		return true
+	end
+	if IsPartyLeader and IsPartyLeader() then
+		return true
+	end
+	if IsRaidLeader and IsRaidLeader("player") then
+		return true
+	end
+	return false
+end
+
+function SocialPlus_ShouldSuggestInvite()
+	return SocialPlus_IsPlayerInGroup() and not SocialPlus_IsPlayerGroupLeader()
 end
 
 local INVITE_RESTRICTION_NO_GAME_ACCOUNTS=0
@@ -243,24 +279,374 @@ local GroupCount=0
 local GroupTotal={}
 local GroupOnline={}
 local GroupSorted={}
-
 local FriendRequestString=string.sub(FRIEND_REQUESTS,1,-6)
 
+-- [[ Custom group ordering + drag state ]]
+local SocialPlus_DragSourceGroup=nil
+local SocialPlus_DragHoverGroup=nil
+local SocialPlus_DragSourceButton=nil
+local SocialPlus_DragGhostFrame=nil
+
+local function SocialPlus_GetDragGhost()
+	if not SocialPlus_DragGhostFrame then
+		local f=CreateFrame("Frame","SocialPlusDragGhost",UIParent,"BackdropTemplate")
+		f:SetFrameStrata("TOOLTIP")
+		f:SetFrameLevel(1000)
+
+		f.bg=f:CreateTexture(nil,"BACKGROUND")
+		f.bg:SetAllPoints(true)
+
+		f:SetBackdrop({
+			edgeFile="Interface\\Tooltips\\UI-Tooltip-Border",
+			tile=false,
+			edgeSize=8,
+		})
+
+        f:SetBackdropBorderColor(0,0,0,0.25)
+        -- soft blue ghost background
+		f.bg:SetColorTexture(0.15, 0.35, 0.65, 0.28)
+
+
+		-- header text (group name)
+		f.text=f:CreateFontString(nil,"OVERLAY","GameFontNormal")
+		f.text:ClearAllPoints()
+		f.text:SetPoint("TOP",0,-3)          -- centered at top
+		f.text:SetJustifyH("CENTER")
+
+		-- up to 5 sample friend names (left aligned under header)
+		f.friend1=f:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
+		f.friend1:ClearAllPoints()
+		f.friend1:SetPoint("TOPLEFT",f,"TOPLEFT",8,-22)  -- fixed left margin
+		f.friend1:SetJustifyH("LEFT")
+
+
+		f.friend2=f:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
+		f.friend2:SetPoint("TOPLEFT",f.friend1,"BOTTOMLEFT",0,-1)
+		f.friend2:SetJustifyH("LEFT")
+
+		f.friend3=f:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
+		f.friend3:SetPoint("TOPLEFT",f.friend2,"BOTTOMLEFT",0,-1)
+		f.friend3:SetJustifyH("LEFT")
+
+		f.friend4=f:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
+		f.friend4:SetPoint("TOPLEFT",f.friend3,"BOTTOMLEFT",0,-1)
+		f.friend4:SetJustifyH("LEFT")
+
+		f.friend5=f:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
+		f.friend5:SetPoint("TOPLEFT",f.friend4,"BOTTOMLEFT",0,-1)
+		f.friend5:SetJustifyH("LEFT")
+
+		f:SetAlpha(0.80)
+		f:Hide()
+
+		SocialPlus_DragGhostFrame=f
+	end
+	return SocialPlus_DragGhostFrame
+end
+
+-- Given a visible friends-list button, resolve which group it belongs to.
+-- If it's a header row, return that group. If it's a friend row, walk
+-- backwards in FriendButtons until we find its group divider.
+function SocialPlus_GetGroupKeyFromRow(btn)
+	if not btn or not btn.index then
+		return nil
+	end
+
+	local fb=FriendButtons[btn.index]
+	if not fb then
+		return nil
+	end
+
+	-- If this row *is* a divider, its text is the group key
+	if fb.buttonType==FRIENDS_BUTTON_TYPE_DIVIDER then
+		return fb.text
+	end
+
+	-- Otherwise, scan up to find the nearest divider above
+	for i=btn.index-1,1,-1 do
+		local row=FriendButtons[i]
+		if row and row.buttonType==FRIENDS_BUTTON_TYPE_DIVIDER then
+			return row.text
+		end
+	end
+
+	return nil
+end
+
+-- Rebuild GroupSorted based on GroupTotal and saved custom order
+local function SocialPlus_ApplyGroupOrder()
+	wipe(GroupSorted)
+
+	if not GroupTotal then return end
+	local groupOrder=SocialPlus_SavedVars and SocialPlus_SavedVars.groupOrder or nil
+	local indexByName={}
+
+	if groupOrder then
+		for i,name in ipairs(groupOrder) do
+			if type(name)=="string" and name~="" then
+				indexByName[name]=i
+			end
+		end
+	end
+
+	local hasFriendReq=false
+	local hasGeneral=false
+	local others={}
+
+	for groupName in pairs(GroupTotal) do
+		if groupName==FriendRequestString then
+			hasFriendReq=true
+		elseif groupName=="" then
+			hasGeneral=true
+		else
+			table.insert(others,groupName)
+		end
+	end
+
+	table.sort(others,function(a,b)
+		local ai=indexByName[a] or math.huge
+		local bi=indexByName[b] or math.huge
+		if ai~=bi then
+			return ai<bi       -- custom order from SavedVars wins
+		end
+		return a<b            -- fallback: alphabetical
+	end)
+
+	if hasFriendReq then
+		table.insert(GroupSorted,FriendRequestString) -- pinned at top
+	end
+	for _,name in ipairs(others) do
+		table.insert(GroupSorted,name)
+	end
+	if hasGeneral then
+		table.insert(GroupSorted,"")                  -- "" (General) pinned at bottom
+	end
+end
+
+-- Drop any custom order and rebuild in pure A–Z.
+function SocialPlus_SortGroupsAlphabetically()
+	SocialPlus_EnsureSavedVars()
+	SocialPlus_SavedVars.groupOrder=nil
+	SocialPlus_ApplyGroupOrder()
+	SocialPlus_Update(true)
+	if FriendsList_Update then
+		pcall(FriendsList_Update)
+	end
+end
+
+-- Move source group based on current visible order (GroupSorted),
+-- with direction-aware behavior (drag up = above target, drag down = below).
+SocialPlus_SetCustomGroupOrderFromMove=function(source,target)
+	if not source or not target or source==target then return end
+	-- don’t drag Friend Requests or the implicit General bucket
+	if source==FriendRequestString or source=="" then return end
+	if target==FriendRequestString or target=="" then return end
+
+	SocialPlus_EnsureSavedVars()
+
+	-- Build base from current visible order (excluding pinned buckets)
+	local base={}
+	local sourceIndex,targetIndex
+
+	for _,name in ipairs(GroupSorted or {}) do
+		if name~=FriendRequestString and name~="" then
+			table.insert(base,name)
+			local idx=#base
+			if name==source then sourceIndex=idx end
+			if name==target then targetIndex=idx end
+		end
+	end
+
+	if not sourceIndex or not targetIndex or sourceIndex==targetIndex then
+		return
+	end
+
+	local originalSourceIndex=sourceIndex
+	local originalTargetIndex=targetIndex
+
+	-- Remove source from its old position
+	local moving=table.remove(base,sourceIndex)
+
+	-- If source was before target, removing it shifts target left by 1
+	if sourceIndex<targetIndex then
+		targetIndex=targetIndex-1
+	end
+
+	-- Direction-aware insert:
+	-- - dragging down (originalSourceIndex < originalTargetIndex): insert AFTER target
+	-- - dragging up   (originalSourceIndex > originalTargetIndex): insert BEFORE target
+	local insertIndex
+	if originalSourceIndex<originalTargetIndex then
+		insertIndex=targetIndex+1 -- below target
+	else
+		insertIndex=targetIndex    -- above target
+	end
+
+	-- Safety clamps
+	if insertIndex<1 then insertIndex=1 end
+	if insertIndex>#base+1 then insertIndex=#base+1 end
+
+	table.insert(base,insertIndex,moving)
+
+	SocialPlus_SavedVars.groupOrder=base
+
+	-- Rebuild & refresh immediately
+	SocialPlus_Update(true)
+	if FriendsList_Update then
+		pcall(FriendsList_Update)
+	end
+end
+
+local function SocialPlus_OnGroupDragStart(self)
+	local group=self and self.SocialPlusGroupName
+	-- don’t drag pinned buckets
+	if not group or group==FriendRequestString or group=="" then
+		return
+	end
+
+	SocialPlus_DragSourceGroup=group
+	SocialPlus_DragSourceButton=self
+
+
+	-- ghost frame
+	local ghost=SocialPlus_GetDragGhost()
+
+	-- sample friends from this group
+	local headerIndex=self.index
+	local samples=SocialPlus_SampleGroupFriends(headerIndex,5) -- soft cap at 5
+
+	-- set header text
+	if ghost.text then
+	ghost.text:SetText(group)
+	end
+
+
+	-- set sample friend names
+	local lineCount=0
+	if ghost.friend1 then
+		local name1=samples[1]
+		if name1 then
+			ghost.friend1:SetText(name1)
+			ghost.friend1:Show()
+			lineCount=lineCount+1
+		else
+			ghost.friend1:SetText("")
+			ghost.friend1:Hide()
+		end
+	end
+	if ghost.friend2 then
+		local name2=samples[2]
+		if name2 then
+			ghost.friend2:SetText(name2)
+			ghost.friend2:Show()
+			lineCount=lineCount+1
+		else
+			ghost.friend2:SetText("")
+			ghost.friend2:Hide()
+		end
+	end
+	if ghost.friend3 then
+    local name3=samples[3]
+    if name3 then
+        ghost.friend3:SetText(name3)
+        ghost.friend3:Show()
+        lineCount=lineCount+1
+    else
+        ghost.friend3:SetText("")
+        ghost.friend3:Hide()
+    end
+	end
+	if ghost.friend4 then
+    local name4=samples[4]
+    if name4 then
+        ghost.friend4:SetText(name4)
+        ghost.friend4:Show()
+        lineCount=lineCount+1
+    else
+        ghost.friend4:SetText("")
+        ghost.friend4:Hide()
+    end
+	end
+	if ghost.friend5 then
+    local name5=samples[5]
+    if name5 then
+        ghost.friend5:SetText(name5)
+        ghost.friend5:Show()
+        lineCount=lineCount+1
+    else
+        ghost.friend5:SetText("")
+        ghost.friend5:Hide()
+    end
+end
+
+	-- size ghost: header height + a bit per line
+	local baseW=self:GetWidth()
+	local baseH=self:GetHeight()
+	local extraH=(lineCount>0) and (lineCount*14+4) or 0
+
+
+	ghost:SetSize(baseW,baseH+extraH)
+	ghost:Show()
+
+	-- follow cursor
+	ghost:SetScript("OnUpdate",function(frame)
+		if not SocialPlus_DragSourceGroup then
+			frame:Hide()
+			frame:SetScript("OnUpdate",nil)
+			return
+		end
+		local x,y=GetCursorPosition()
+		local scale=UIParent:GetEffectiveScale()
+		frame:ClearAllPoints()
+		frame:SetPoint("CENTER",UIParent,"BOTTOMLEFT",x/scale,y/scale)
+	end)
+end
+
+local function SocialPlus_OnGroupDragStop(self)
+	if not SocialPlus_DragSourceGroup then
+		return
+	end
+
+	-- hide ghost + stop tracking cursor
+	if SocialPlus_DragGhostFrame then
+		SocialPlus_DragGhostFrame:Hide()
+		SocialPlus_DragGhostFrame:SetScript("OnUpdate",nil)
+	end
+
+	local source=SocialPlus_DragSourceGroup
+	local target=SocialPlus_DragHoverGroup  -- usually set by OnEnter while dragging
+
+	-- Fallback: if hover target is invalid, infer it from the button we released on
+	if (not target or target==source or target==FriendRequestString or target=="") and self then
+		local fallback
+		if self.buttonType==FRIENDS_BUTTON_TYPE_DIVIDER then
+			fallback=self.SocialPlusGroupName
+		else
+			fallback=SocialPlus_GetGroupKeyFromRow(self)
+		end
+
+		if fallback and fallback~=source and fallback~=FriendRequestString and fallback~="" then
+			target=fallback
+		end
+	end
+
+	SocialPlus_DragSourceButton=nil
+	SocialPlus_DragSourceGroup=nil
+	SocialPlus_DragHoverGroup=nil
+
+	-- still no valid target? Cancel.
+	if not target or target==source or target==FriendRequestString or target=="" then
+		return
+	end
+
+	SocialPlus_SetCustomGroupOrderFromMove(source,target)
+end
+
+-- [[ Dropdown menu integration (right-click friend) ]]
 local OPEN_DROPDOWNMENUS_SAVE=nil
 local friend_popup_menus={"FRIEND","FRIEND_OFFLINE","BN_FRIEND","BN_FRIEND_OFFLINE"}
 
--- Dropdown integration disabled on MoP Classic to avoid tainting secure menus.
---[[
-if type(UnitPopupButtons)=="table" and type(UnitPopupMenus)=="table" then
-    UnitPopupButtons["SocialPlus_NEW"]={text="Create new group"}
-    UnitPopupButtons["SocialPlus_ADD"]={text="Add to group",nested=1}
-    UnitPopupButtons["SocialPlus_DEL"]={text="Remove from group",nested=1}
-    UnitPopupMenus["SocialPlus_ADD"]={}
-    UnitPopupMenus["SocialPlus_DEL"]={}
-end
-]]
-
-
+-- Determine the current max player level for the active expansion	
 local currentExpansionMaxLevel=90 -- MoP Classic cap
 if type(GetMaxPlayerLevel)=="function" then
 	currentExpansionMaxLevel=GetMaxPlayerLevel()
@@ -956,6 +1342,56 @@ local function SocialPlus_GetBNetButtonNameText(accountName,client,canCoop,chara
 	return nameText
 end
 
+function SocialPlus_SampleGroupFriends(headerIndex,maxCount)
+	local names={}
+	if not headerIndex or not FriendButtons or not maxCount or maxCount<=0 then
+		return names
+	end
+
+	local total=FriendButtons.count or 0
+	for i=headerIndex+1,total do
+		local row=FriendButtons[i]
+		if not row or row.buttonType==FRIENDS_BUTTON_TYPE_DIVIDER then
+			break -- end of this group
+		end
+
+		local display=nil
+
+		if row.buttonType==FRIENDS_BUTTON_TYPE_WOW then
+			if FG_GetFriendInfoByIndex then
+				local info=FG_GetFriendInfoByIndex(row.id)
+				if info then
+					display=info.name or info.name_with_realm or info.characterName or info.nameText
+				end
+			end
+
+		elseif row.buttonType==FRIENDS_BUTTON_TYPE_BNET then
+			if GetFriendInfoById and SocialPlus_GetBNetButtonNameText then
+				local id=row.id
+				local accountName,characterName,class,level,isFavoriteFriend,
+					isOnline,bnetAccountId,client,canCoop,wowProjectID,lastOnline,
+					isAFK,isGameAFK,isDND,isGameBusy,mobile,zoneName,gameText,realmName=
+					GetFriendInfoById(id)
+
+				if accountName or characterName then
+					display=SocialPlus_GetBNetButtonNameText(
+						accountName,client,canCoop,characterName,class,level,realmName
+					)
+				end
+			end
+		end
+
+		if display and display~="" then
+			names[#names+1]=display
+			if #names>=maxCount then
+				break
+			end
+		end
+	end
+
+	return names
+end
+
 -- [[ Core per-row button update ]]
 local function SocialPlus_UpdateFriendButton(button)
 	local index=button.index
@@ -970,7 +1406,9 @@ local function SocialPlus_UpdateFriendButton(button)
 	button.accountName=nil
 	button.characterName=nil
 	button.realmName=nil
+	button.SocialPlusGroupName=nil -- only used on divider (group header) rows
 
+	-- Update based on button type
 	if button.buttonType==FRIENDS_BUTTON_TYPE_WOW then
 		local info=FG_GetFriendInfoByIndex(FriendButtons[index].id)
 		broadcastText=nil
@@ -1224,6 +1662,17 @@ local function SocialPlus_UpdateFriendButton(button)
 		)
 		button.background:SetAlpha(0.5)
 
+	-- drag-and-drop for group headers
+	button.SocialPlusGroupName=group
+
+if not button.SocialPlusHeaderDragHooked then
+	button:RegisterForDrag("LeftButton")
+	button:SetScript("OnDragStart",SocialPlus_OnGroupDragStart)
+	button:SetScript("OnDragStop",SocialPlus_OnGroupDragStop)
+	button.SocialPlusHeaderDragHooked=true
+end
+
+
 	elseif button.buttonType==FRIENDS_BUTTON_TYPE_INVITE_HEADER then
 		local header=FriendsScrollFrame.PendingInvitesHeaderButton
 		header:SetPoint("TOPLEFT",button,1,0)
@@ -1471,8 +1920,8 @@ local function IncrementGroup(group,online)
 end
 
 -- [[ Master update: builds FriendButtons + groups ]]
+    function SocialPlus_Update(forceUpdate)
 
-local function SocialPlus_Update(forceUpdate)
 	local numBNetTotal,numBNetOnline,numBNetFavorite,numBNetFavoriteOnline=FG_BNGetNumFriends()
 	numBNetFavorite=numBNetFavorite or 0
 	numBNetFavoriteOnline=numBNetFavoriteOnline or 0
@@ -1749,21 +2198,11 @@ local function SocialPlus_Update(forceUpdate)
 	end
 
 	for group in pairs(GroupTotal) do
-		table.insert(GroupSorted,group)
-	end
-	table.sort(GroupSorted)
+    table.insert(GroupSorted,group)
+end
 
-	if GroupSorted[1]=="" then
-		table.remove(GroupSorted,1)
-		table.insert(GroupSorted,"")
-	end
+SocialPlus_ApplyGroupOrder()
 
-	for key,val in pairs(GroupSorted) do
-		if val==FriendRequestString then
-			table.remove(GroupSorted,key)
-			table.insert(GroupSorted,1,FriendRequestString)
-		end
-	end
 
 	local index=0
 	for _,group in ipairs(GroupSorted) do
@@ -2280,6 +2719,7 @@ local menu_items={
 		{text=L.GROUP_INVITE_ALL,notCheckable=true,func=function(self,menu,clickedgroup) InviteOrGroup(clickedgroup,true) end},
 		{text=L.GROUP_RENAME,notCheckable=true,func=function(self,menu,clickedgroup) StaticPopup_Show("SocialPlus_RENAME",nil,nil,clickedgroup) end},
 		{text=L.GROUP_REMOVE,notCheckable=true,func=function(self,menu,clickedgroup) InviteOrGroup(clickedgroup,false) end},
+        {text=L.GROUP_REORDER_AZ,notCheckable=true,func=function(self,menu,clickedgroup) SocialPlus_SortGroupsAlphabetically() end},
 	},
 	-- Settings are now in the left-side panel. This submenu is intentionally removed.
 }
@@ -2448,6 +2888,7 @@ function SocialPlus_ShowScrollSpeedPopup(group)
 	SocialPlus_ScrollSpeedFrame._pendingScrollSpeed = v
 	SocialPlus_ScrollSpeedFrame:Show()
 end
+
 
 -- [[ Preferences Panel (left-side) ]]
 function SocialPlus_CreateSettingsButton()
@@ -2802,54 +3243,69 @@ end
 -- Returns true/false, reason string, and optional invite restriction code
 -- Helper: SocialPlus_GetInviteStatus is declared at top scope
 
-SocialPlus_GetInviteStatus = function(kind,id)
-	if not kind or not id then return false, L.INVITE_GENERIC_FAIL, INVITE_RESTRICTION_INFO end
+SocialPlus_GetInviteStatus=function(kind,id)
+	if not kind or not id then return false,L.INVITE_GENERIC_FAIL,INVITE_RESTRICTION_INFO end
 
 	-- Ensure player faction is initialized
 	if not playerFaction then FG_InitFactionIcon() end
 
 	if kind=="WOW" then
 		local info=FG_GetFriendInfoByIndex(id)
-		if not info then return false, L.INVITE_GENERIC_FAIL, INVITE_RESTRICTION_INFO end
-		if not info.connected then return false, L.INVITE_REASON_NOT_WOW, INVITE_RESTRICTION_INFO end
+		if not info then return false,L.INVITE_GENERIC_FAIL,INVITE_RESTRICTION_INFO end
+		if not info.connected then return false,L.INVITE_REASON_NOT_WOW,INVITE_RESTRICTION_INFO end
 
 		-- Some WoW friend info may include factionName or faction; check if present
-		local friendFaction = info.factionName or info.faction
+		local friendFaction=info.factionName or info.faction
 		if friendFaction and playerFaction and friendFaction~=playerFaction then
-			return false, L.INVITE_REASON_OPPOSITE_FACTION, INVITE_RESTRICTION_FACTION
+			return false,L.INVITE_REASON_OPPOSITE_FACTION,INVITE_RESTRICTION_FACTION
 		end
 
 		-- Otherwise allow invite (other checks like realm are not applicable for local friends)
-		return true, nil, INVITE_RESTRICTION_NONE
+		return true,nil,INVITE_RESTRICTION_NONE
+
 	elseif kind=="BNET" then
 		local accountName,characterName,class,level,isFavoriteFriend,
-			  isOnline,bnetAccountId,client,canCoop,wowProjectID,lastOnline,
-			  isAFK,isGameAFK,isDND,isGameBusy,mobile,zoneName,gameText,realmName = GetFriendInfoById(id)
+		      isOnline,bnetAccountId,client,canCoop,wowProjectID,lastOnline,
+		      isAFK,isGameAFK,isDND,isGameBusy,mobile,zoneName,gameText,realmName=
+		      GetFriendInfoById(id)
 
-		if not isOnline then return false, L.INVITE_REASON_NOT_WOW, INVITE_RESTRICTION_INFO end
-		if client~=BNET_CLIENT_WOW then return false, L.INVITE_REASON_NOT_WOW, INVITE_RESTRICTION_NO_GAME_ACCOUNTS end
-		if WOW_PROJECT_ID and wowProjectID and wowProjectID~=WOW_PROJECT_ID then
-			return false, L.INVITE_REASON_WRONG_PROJECT, INVITE_RESTRICTION_WOW_PROJECT_ID
+		-- Must be online and actually in WoW
+		if not isOnline then
+			return false,L.INVITE_REASON_NOT_WOW,INVITE_RESTRICTION_INFO
 		end
-		if not characterName or characterName=="" then return false, L.INVITE_GENERIC_FAIL, INVITE_RESTRICTION_INFO end
-		if not realmName or realmName=="" then return false, L.INVITE_REASON_NO_REALM, INVITE_RESTRICTION_REALM end
+		if client~=BNET_CLIENT_WOW then
+			return false,L.INVITE_REASON_NOT_WOW,INVITE_RESTRICTION_NO_GAME_ACCOUNTS
+		end
+		if WOW_PROJECT_ID and wowProjectID and wowProjectID~=WOW_PROJECT_ID then
+			return false,L.INVITE_REASON_WRONG_PROJECT,INVITE_RESTRICTION_WOW_PROJECT_ID
+		end
 
-		-- Check faction for BNet friends via C_BattleNet.GetFriendAccountInfo if available
+		-- Try to get faction via C_BattleNet (if Classic client exposes it)
+		local friendFaction=nil
 		if C_BattleNet and C_BattleNet.GetFriendAccountInfo and type(C_BattleNet.GetFriendAccountInfo)=="function" then
 			local acct=C_BattleNet.GetFriendAccountInfo(id)
 			local ga=acct and acct.gameAccountInfo or nil
-			local friendFaction = ga and ga.factionName or nil
-			if friendFaction and playerFaction and friendFaction~=playerFaction then
-				return false, L.INVITE_REASON_OPPOSITE_FACTION, INVITE_RESTRICTION_FACTION
-			end
+			friendFaction=ga and ga.factionName or nil
 		end
 
-		-- Allow invite if none of the conditions were met
-		return true, nil, INVITE_RESTRICTION_NONE
+		-- Blizzard's own "canCoop" flag is the truth for grouping:
+		-- false = can't group (cross-region, incompatible, opposite faction, etc.)
+		if canCoop==false then
+			-- If we know faction and it's opposite, prefer that reason
+			if friendFaction and playerFaction and friendFaction~=playerFaction then
+				return false,L.INVITE_REASON_OPPOSITE_FACTION,INVITE_RESTRICTION_FACTION
+			end
+			-- Otherwise generic cross-realm/region style reason
+			local reason=L.MSG_INVITE_CROSSREALM or L.INVITE_REASON_NO_REALM
+			return false,reason,INVITE_RESTRICTION_REALM
+		end
+
+		-- If we got here, let Blizzard handle any edge cases when we click the button
+		return true,nil,INVITE_RESTRICTION_NONE
 	end
 
 	-- Unknown kind
-	return false, L.INVITE_GENERIC_FAIL, INVITE_RESTRICTION_INFO
+	return false,L.INVITE_GENERIC_FAIL,INVITE_RESTRICTION_INFO
 end
 
 -- Expose global alias so third-party callers that expect a global will find it
@@ -2970,55 +3426,76 @@ SocialPlus_FriendMenu.initialize=function(self,level)
 		end
 		UIDropDownMenu_AddButton(info,level)
 
-		-- Invite
-		info=UIDropDownMenu_CreateInfo()
-		info.text=L.MENU_INVITE
-		info.notCheckable=true
+-- Invite / Suggest invite
+info=UIDropDownMenu_CreateInfo()
+
+local isSuggest = SocialPlus_ShouldSuggestInvite and SocialPlus_ShouldSuggestInvite()
+local label = isSuggest and (L.MENU_SUGGEST or L.MENU_INVITE) or L.MENU_INVITE
+
+info.text=label
+info.notCheckable=true
+
 
 		-- Determine invite eligibility and reason for the dropdown friend
-		local kind,id = SocialPlus_GetDropdownFriend()
-		local canInvite, reason = false, nil
+		local kind,id=SocialPlus_GetDropdownFriend()
+		local canInvite,reason=false,nil
 		if kind and id then
-			canInvite, reason = SocialPlus_GetInviteStatus(kind,id)
+			canInvite,reason=SocialPlus_GetInviteStatus(kind,id)
 		else
-			canInvite = false
-			reason = L.INVITE_GENERIC_FAIL
-		end
-		info.disabled=not canInvite
-		if info.disabled and reason and reason~="" then
-			info.tooltipTitle = "|cffff4444"..L.MENU_INVITE.."|r"
-			info.tooltipText = reason
-		else
-			info.tooltipTitle = L.MENU_INVITE
-			info.tooltipText = nil
+			canInvite=false
+			reason=L.INVITE_GENERIC_FAIL
 		end
 
-		info.func=function()
-			if not SocialPlus_CanInviteMenuTarget() or not InviteUnit then return end
+info.disabled=not canInvite
+if info.disabled and reason and reason~="" then
+	info.tooltipTitle="|cffff4444"..label.."|r"
+	info.tooltipText=reason
+else
+	info.tooltipTitle=label
+	info.tooltipText=nil
+end
+
+
+				info.func=function()
+			if not SocialPlus_CanInviteMenuTarget() then return end
 
 			local kind,id=SocialPlus_GetDropdownFriend()
 			if not kind or not id then return end
 
-			if kind=="WOW" then
-				local fi=FG_GetFriendInfoByIndex(id)
-				local target=fi and fi.name
-				if target and target~="" then
-					pcall(InviteUnit,target)
+			-- Recheck permission using the same helper the button uses
+			local allowed,reason=SocialPlus_GetInviteStatus(kind,id)
+			if not allowed then
+				if reason and UIErrorsFrame and UIErrorsFrame.AddMessage then
+					UIErrorsFrame:AddMessage(reason,1,0.1,0.1,1.0)
 				end
-			elseif kind=="BNET" then
-				local accountName,characterName,class,level,isFavoriteFriend,
-				      isOnline,bnetAccountId,client,canCoop,wowProjectID,_,_,_,_,_,_,_,realmName=
-				      GetFriendInfoById(id)
+				return
+			end
 
-				if characterName and characterName~="" then
-					local target=characterName
-					if realmName and realmName~="" then
-						target=characterName.."-"..realmName
-					end
-					pcall(InviteUnit,target)
+			-- Find the actual row button in the scroll frame
+			local rowButton=SocialPlus_GetFriendRowButton(kind,id)
+			if not rowButton or not rowButton.travelPassButton then
+				return
+			end
+
+			local travel=rowButton.travelPassButton
+
+			-- Mirror the button's own enable/disable state + tooltip reason
+			if not(travel.fgInviteAllowed or travel:IsEnabled()) then
+				local why=travel.fgInviteReason or reason or L.INVITE_GENERIC_FAIL
+				if UIErrorsFrame and UIErrorsFrame.AddMessage then
+					UIErrorsFrame:AddMessage(why,1,0.1,0.1,1.0)
 				end
+				return
+			end
+
+			-- 🔑 Core trick: simulate clicking the invite button itself
+			if travel.Click then
+				travel:Click()
+			elseif travel:GetScript("OnClick") then
+				travel:GetScript("OnClick")(travel)
 			end
 		end
+
 		UIDropDownMenu_AddButton(info,level)
 
 		-- Copy character name
@@ -3141,11 +3618,24 @@ local function SocialPlus_OnClick(self,button)
 end
 
 local function SocialPlus_OnEnter(self)
+	-- Existing behavior: don’t show standard tooltip on group headers
 	if self.buttonType==FRIENDS_BUTTON_TYPE_DIVIDER then
 		if FriendsTooltip:IsShown() then
 			FriendsTooltip:Hide()
 		end
-		return
+	end
+
+	-- New: while dragging a group header, remember which group we’re hovering
+	if SocialPlus_DragSourceGroup then
+		local groupKey
+
+		if self.buttonType==FRIENDS_BUTTON_TYPE_DIVIDER then
+			groupKey=self.SocialPlusGroupName
+		else
+			groupKey=SocialPlus_GetGroupKeyFromRow(self)
+		end
+
+		SocialPlus_DragHoverGroup=groupKey
 	end
 end
 
@@ -3163,33 +3653,53 @@ local function HookButtons()
 				btn.SocialPlus_OrigOnClick=btn:GetScript("OnClick")
 			end
 
+
 			btn:SetScript("OnClick",SocialPlus_OnClick)
+			btn:HookScript("OnEnter",SocialPlus_OnEnter)
+          
+			if not btn.SocialPlus_OrigOnMouseUp then
+                btn.SocialPlus_OrigOnMouseUp=btn:GetScript("OnMouseUp")
+            end
 
-			if not FriendsFrameTooltip_Show then
-				btn:HookScript("OnEnter",SocialPlus_OnEnter)
-			end
+            btn:SetScript("OnMouseUp",function(self,button)
+                if SocialPlus_DragSourceGroup then
+                    -- consume the mouse-up as a drop target
+                    SocialPlus_OnRowMouseUp(self,button)
+                    return
+                end
+                if self.SocialPlus_OrigOnMouseUp then
+                    self.SocialPlus_OrigOnMouseUp(self,button)
+                end
+            end)
 
+			-- Invite tooltip for travel pass button
 			local travel=btn.travelPassButton
 			if travel and not travel.FG_TooltipHooked then
 				travel.FG_TooltipHooked=true
 
-				travel:HookScript("OnEnter",function(self)
-					if not GameTooltip then return end
-					GameTooltip:SetOwner(self,"ANCHOR_RIGHT")
-					local title=L.MENU_INVITE
+travel:HookScript("OnEnter",function(self)
+	if not GameTooltip then return end
+	GameTooltip:SetOwner(self,"ANCHOR_RIGHT")
 
-					if self.fgInviteAllowed or self:IsEnabled() then
-						GameTooltip:SetText(title,1,1,1)
-					else
-						GameTooltip:SetText(title,1,0.1,0.1)
-						local reason=self.fgInviteReason or L.INVITE_GENERIC_FAIL
-						GameTooltip:AddLine(reason,1,0.3,0.3,true)
-					end
+	local title
+	if SocialPlus_ShouldSuggestInvite and SocialPlus_ShouldSuggestInvite() then
+		title=L.MENU_SUGGEST or L.MENU_INVITE
+	else
+		title=L.MENU_INVITE
+	end
 
-					GameTooltip:Show()
-				end)
+	if self.fgInviteAllowed or self:IsEnabled() then
+		GameTooltip:SetText(title,1,1,1)
+	else
+		GameTooltip:SetText(title,1,0.1,0.1)
+		local reason=self.fgInviteReason or L.INVITE_GENERIC_FAIL
+		GameTooltip:AddLine(reason,1,0.3,0.3,true)
+	end
 
-				travel:HookScript("OnLeave",function()
+	GameTooltip:Show()
+end)
+
+travel:HookScript("OnLeave",function()
 					if GameTooltip then GameTooltip:Hide() end
 				end)
 			end
@@ -3227,6 +3737,24 @@ function SocialPlus_GetDropdownFriend()
 			end
 		end
 	end
+end
+
+function SocialPlus_GetFriendRowButton(kind,id)
+	if not kind or not id then return nil end
+	local scrollFrame=FriendsScrollFrame
+	if not scrollFrame or not scrollFrame.buttons then return nil end
+
+	for _,button in ipairs(scrollFrame.buttons) do
+		if button.buttonType and button.id then
+			if kind=="BNET" and button.buttonType==FRIENDS_BUTTON_TYPE_BNET and button.id==id then
+				return button
+			elseif kind=="WOW" and button.buttonType==FRIENDS_BUTTON_TYPE_WOW and button.id==id then
+				return button
+			end
+		end
+	end
+
+	return nil
 end
 
 function SocialPlus_GetDropdownFriendNote()
