@@ -1,0 +1,22 @@
+package-as: SocialPlus
+
+enable-nolib-creation: no
+
+game-version:
+  - 5.5.3
+
+manual-changelog-file: CHANGELOGS.md
+changelog-format: markdown
+
+ignore:
+  - .git
+  - .github
+  - .vscode
+  - .idea
+  - "*.psd"
+  - "*.xcf"
+  - "*.png"
+  - "*.jpg"
+  - "*.jpeg"
+  - "*.bat"
+  - "*.sh"
