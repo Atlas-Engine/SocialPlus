@@ -1,4 +1,4 @@
-## Interface: 50500
+## Interface: 50502, 50503
 ## Title: SocialPlus
 ## Author: David / Atlas-Engine
 ## Version: @project-version@
