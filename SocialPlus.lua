@@ -101,7 +101,7 @@ do
 		L.MENU_GROUPS             = "Group Management"
         L.MENU_CREATE_GROUP       = "Create Group"
         L.MENU_ADD_TO_GROUP       = "Add to Group"
-        L.MENU_MOVE_TO_GROUP      = "Move to Another Group"
+        L.MENU_MOVE_TO_GROUP      = "Move to another Group"
         L.MENU_REMOVE_FROM_GROUP  = "Remove from Group"
 
         L.MENU_OTHER_OPTIONS      = "Additional Options"
@@ -179,7 +179,6 @@ local function FG_Debug(...)
 	end
 end
 
-
 -- Handle drag stop: determine target group and reorder	
 local function Hook(source,target,secure)
 	-- MoP Classic: skip hooking UnitPopup_* entirely; its implementation differs from modern retail
@@ -225,7 +224,6 @@ function SocialPlus_EnsureSavedVars()
 	   SocialPlus_SavedVars.collapsed[""] = nil
 	end
 end
-
 
 -- Group / leader helpers
 local function SocialPlus_IsPlayerInGroup()
@@ -285,7 +283,7 @@ if WOW_PROJECT_ID==WOW_PROJECT_CLASSIC then
 	INVITE_RESTRICTION_MOBILE=9
 end
 
-
+-- Determine the player's region ID based on the "portal" CVar
 local playerRegionID=nil
 
 local function SocialPlus_GetClientRegionID()
@@ -332,6 +330,7 @@ local SCROLL_BASE = 2.2
 -- Apply a tuning factor < 1.0 to slow speeds globally as requested
 local SCROLL_TUNE_FACTOR = 0.85
 
+-- Friend list state	
 local FriendButtons={count=0}
 local GroupCount=0
 local GroupTotal={}
@@ -538,13 +537,13 @@ local function SocialPlus_ApplyGroupOrder()
 	end)
 
 	if hasFriendReq then
-		table.insert(GroupSorted,FriendRequestString) -- pinned at top
+		table.insert(GroupSorted,FriendRequestString)
 	end
 	for _,name in ipairs(others) do
 		table.insert(GroupSorted,name)
 	end
 	if hasGeneral then
-		table.insert(GroupSorted,"")                  -- "" (General) pinned at bottom
+		table.insert(GroupSorted,"")                  
 	end
 end
 
@@ -632,7 +631,6 @@ local function SocialPlus_OnGroupDragStart(self)
 	SocialPlus_DragSourceGroup=group
 	SocialPlus_DragSourceButton=self
 
-
 	-- ghost frame
 	local ghost=SocialPlus_GetDragGhost()
 
@@ -644,7 +642,6 @@ local function SocialPlus_OnGroupDragStart(self)
 	if ghost.text then
 	ghost.text:SetText(group)
 	end
-
 
 	-- set sample friend names
 	local lineCount=0
@@ -914,8 +911,6 @@ outer:Hide()
 SocialPlus_SearchGlow=glow
 SocialPlus_SearchGlowOuter=outer
 
-
-
 	-- Fixed, visible position near top-right
 	local sbWidth = 139
 	local locale = GetLocale and GetLocale() or nil
@@ -998,8 +993,6 @@ end)
 
     FriendsList_Update()
 	end)
-
-
 
 	SocialPlus_Searchbox:SetScript("OnEscapePressed",function(self)
     self:SetText("")
@@ -1158,7 +1151,7 @@ local function SocialPlus_PerformInvite(kind,id)
 
 	return false,L.INVITE_GENERIC_FAIL
 end
-
+		
 function SocialPlus_PerformInviteFromButton(button)
 	if not button or not button.buttonType or not button.id then return end
 
@@ -1176,7 +1169,6 @@ function SocialPlus_PerformInviteFromButton(button)
 		UIErrorsFrame:AddMessage(reason,1,0.1,0.1,1.0)
 	end
 end
-
 
 -- [[ Smooth scroll inertia (eased, fixed speed per wheel notch) ]]
 local SocialPlus_ScrollAnim=nil
@@ -1231,7 +1223,7 @@ function SocialPlus_InitSmoothScroll()
 		local baseStep=80  -- lower = smoother, higher = snappier
 
 		-- Slider 1..5 → 0.4..1.8 multiplier
-		local displayValue=(SocialPlus_SavedVars and SocialPlus_SavedVars.scrollSpeed) or 3.0
+		local displayValue=(SocialPlus_SavedVars and SocialPlus_SavedVars.scrollSpeed) or 2.2
 		displayValue=tonumber(displayValue) or 3.0
 		if displayValue<1.0 then displayValue=1.0 end
 		if displayValue>5.0 then displayValue=5.0 end
@@ -1345,7 +1337,6 @@ local function FG_SetFriendNotes(index,note)
 end
 
 -- [[ Safe BN wrappers for compatibility on older clients ]]
-
 local function FG_BNGetNumFriends()
 	if BNGetNumFriends then
 		return BNGetNumFriends()
@@ -3452,7 +3443,7 @@ function SocialPlus_CreateSettingsPanel()
 	slider:SetMinMaxValues(1.0,5.0)
 	slider:SetValueStep(0.1)
 	slider:SetObeyStepOnDrag(true)
-	slider:SetValue(SocialPlus_SavedVars and SocialPlus_SavedVars.scrollSpeed or 3.0)
+	slider:SetValue(SocialPlus_SavedVars and SocialPlus_SavedVars.scrollSpeed or 2.2)
 
 	-- Center numeric value under slider
 	slider.text=_G[slider:GetName().."Text"]
@@ -4214,7 +4205,6 @@ travel:HookScript("OnLeave",function()
 end
 
 -- [[ Friends dropdown integration ]]
-
 function SocialPlus_GetDropdownFriend()
 	if SocialPlus_CurrentFriend and SocialPlus_CurrentFriend.id and SocialPlus_CurrentFriend.buttonType then
 		if SocialPlus_CurrentFriend.buttonType==FRIENDS_BUTTON_TYPE_BNET then
@@ -4500,7 +4490,6 @@ function SocialPlus_RemoveCurrentFriend()
 end
 
 -- [[ Group submenu builder for "Add"/"Remove from group" ]]
-
 function SocialPlus_BuildGroupSubmenu(mode,level)
 	local dropdown=FriendsFrameDropDown or UIDROPDOWNMENU_INIT_MENU
 	if not dropdown then return end

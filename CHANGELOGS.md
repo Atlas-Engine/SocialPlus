@@ -1,3 +1,5 @@
+## v1.14 — Minor fixes and adjustments.
+
 ## v1.13 — Scroll Speed Update
 
 ### English
