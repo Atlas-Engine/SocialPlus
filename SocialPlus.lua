@@ -1178,33 +1178,30 @@ function SocialPlus_PerformInviteFromButton(button)
 end
 
 
--- [[ Smooth scroll inertia (adaptive, fast enough) ]]
+-- [[ Smooth scroll inertia (eased, fixed speed per wheel notch) ]]
 local SocialPlus_ScrollAnim=nil
 
-local function SocialPlus_ScrollOnUpdate(self,elapsed)
-	if not SocialPlus_ScrollAnim or not SocialPlus_ScrollAnim.scrollBar then
-		SocialPlus_ScrollAnim=nil
+function SocialPlus_ScrollOnUpdate(self,elapsed)
+	local anim=SocialPlus_ScrollAnim
+	if not anim then
 		self:SetScript("OnUpdate",nil)
 		return
 	end
 
-	local a=SocialPlus_ScrollAnim
-	a.t=a.t+elapsed
-	local d=a.duration
+	anim.t=anim.t+elapsed
+	local p=anim.t/anim.duration
+	if p>=1 then p=1 end
 
-	if a.t>=d then
-		a.scrollBar:SetValue(a.to)
+	-- Smooth easing: accelerate then decelerate (S-curve)
+	local ease=p*p*(3-2*p)
+
+	local newValue=anim.from+(anim.to-anim.from)*ease
+	anim.scrollBar:SetValue(newValue)
+
+	if p>=1 then
 		SocialPlus_ScrollAnim=nil
 		self:SetScript("OnUpdate",nil)
-		return
 	end
-
-	-- Ease-out
-	local x=a.t/d
-	local alpha=1-(1-x)*(1-x)*(1-x)*(1-x)
-
-	local value=a.from+(a.to-a.from)*alpha
-	a.scrollBar:SetValue(value)
 end
 
 function SocialPlus_InitSmoothScroll()
@@ -1219,36 +1216,36 @@ function SocialPlus_InitSmoothScroll()
 
 		local min,max=sb:GetMinMaxValues()
 		local current=sb:GetValue() or 0
-		local range=max-min
 
-		-- Adaptive step: about 8–10 wheel ticks from top to bottom
-		local baseStep
-		if range <= 400 then
-  		  baseStep = 50      -- small list → give it a real step
+		-- Normalize delta so "hard flick" isn't faster than micro-scroll
+		local dir
+		if delta>0 then
+			dir=1
+		elseif delta<0 then
+			dir=-1
 		else
- 		 baseStep = range/14
+			return
 		end
 
-		-- Apply user-configured scroll speed mapping
-		-- Slider is 1.0–5.0, but we compress it to an "effective" 0.8–3.5
-		-- so low end is slower and high end isn't crazy.
-		local displayValue=(SocialPlus_SavedVars and SocialPlus_SavedVars.scrollSpeed) or SCROLL_BASE
-		displayValue=tonumber(displayValue) or SCROLL_BASE
+		-- Fixed base step: same baseline for everyone
+		local baseStep=80  -- lower = smoother, higher = snappier
+
+		-- Slider 1..5 → 0.4..1.8 multiplier
+		local displayValue=(SocialPlus_SavedVars and SocialPlus_SavedVars.scrollSpeed) or 3.0
+		displayValue=tonumber(displayValue) or 3.0
 		if displayValue<1.0 then displayValue=1.0 end
 		if displayValue>5.0 then displayValue=5.0 end
 
-		-- Map 1..5 → 0.8..3.5 (linear compression)
-		local effMin,effMax=0.8,3.5
-		local t=(displayValue-1.0)/(5.0-1.0)      -- 0 → 1 across slider range
+		local t=(displayValue-1.0)/4.0 -- 1→0, 5→1
 		if t<0 then t=0 end
 		if t>1 then t=1 end
-		local effective=effMin+(effMax-effMin)*t
 
-		local finalMultiplier=(effective/SCROLL_BASE)*SCROLL_TUNE_FACTOR
-		if finalMultiplier<=0 then finalMultiplier=0.01 end
-		baseStep=baseStep*finalMultiplier
+		-- 1.0 → 0.4x (very smooth), 3.0 → ~1.1x, 5.0 → 1.8x (fast but controllable)
+		local finalMultiplier=0.4+1.4*t
 
-		local target=current-delta*baseStep
+		local step=baseStep*finalMultiplier
+
+		local target=current-dir*step
 		if target<min then target=min end
 		if target>max then target=max end
 		if target==current then return end
@@ -1258,7 +1255,7 @@ function SocialPlus_InitSmoothScroll()
 			from=current,
 			to=target,
 			t=0,
-			duration=0.10, -- short, snappy
+			duration=0.11, -- a bit longer, feels smoother
 		}
 
 		self:SetScript("OnUpdate",SocialPlus_ScrollOnUpdate)

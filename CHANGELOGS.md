@@ -1,4 +1,4 @@
-## v1.12 — Scroll Speed Update
+## v1.13 — Scroll Speed Update
 
 ### English
 • Extended scroll speed range from **1 → 5** for more precise control.  
