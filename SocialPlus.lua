@@ -21,7 +21,6 @@ do
         L.MENU_SUGGEST            = "Suggérer une invitation"
         L.MENU_COPY_NAME          = "Copier le nom du personnage"
 		L.MENU_VIEW_FRIENDS       = "Voir ses amis"
-        L.MENU_TARGET             = "Cibler"
 
 		L.MENU_GROUPS             = "Gestion des groupes"
         L.MENU_CREATE_GROUP       = "Créer un groupe"
@@ -98,7 +97,7 @@ do
         L.MENU_SUGGEST            = "Suggest Invite"
         L.MENU_COPY_NAME          = "Copy Character Name"
         L.MENU_VIEW_FRIENDS       = "View friends list"
-		L.MENU_TARGET             = "Target"
+
 		L.MENU_GROUPS             = "Group Management"
         L.MENU_CREATE_GROUP       = "Create Group"
         L.MENU_ADD_TO_GROUP       = "Add to Group"
@@ -768,7 +767,78 @@ local function SocialPlus_OnGroupDragStop(self)
 	SocialPlus_SetCustomGroupOrderFromMove(source,target)
 end
 
--- [[ Dropdown menu integration (right-click friend) ]]
+-- Clear SocialPlus search box if it has content/focus and the click is outside it
+local function SocialPlus_ClearSearchOnClickOutside()
+    if not SocialPlus_Searchbox then return end
+    if not MouseIsOver then return end
+
+    -- If mouse is over the search box, do nothing
+    if MouseIsOver(SocialPlus_Searchbox) then
+        return
+    end
+
+    local txt = SocialPlus_Searchbox:GetText() or ""
+    local hasText = txt:match("%S") ~= nil
+    local hasTerm = SocialPlus_SearchTerm ~= nil
+
+    if not hasText and not hasTerm then
+        return -- nothing to clear
+    end
+
+    SocialPlus_Searchbox:SetText("")
+    SocialPlus_Searchbox:ClearFocus()
+    SocialPlus_SearchTerm = nil
+
+    if SocialPlus_SearchGlow then
+        SocialPlus_SearchGlow:Hide()
+    end
+    if SocialPlus_SearchGlowOuter then
+        SocialPlus_SearchGlowOuter:Hide()
+    end
+
+    if FriendsList_Update then
+        FriendsList_Update()
+    end
+end
+
+-- Close open dropdowns (including SocialPlus menus) when left-clicking anywhere else
+local function SocialPlus_GlobalDropdownClickCloser(self,button)
+    if button~="LeftButton" then return end
+
+    -- Check if any dropdown list is actually open
+    local anyOpen=false
+    local maxLevels=UIDROPDOWNMENU_MAXLEVELS or 2
+    for i=1,maxLevels do
+        local list=_G["DropDownList"..i]
+        if list and list:IsShown() then
+            anyOpen=true
+            break
+        end
+    end
+    if not anyOpen then return end
+
+    -- If the mouse is over any open dropdown, do nothing (let it handle the click)
+    if MouseIsOver then
+        for i=1,maxLevels do
+            local list=_G["DropDownList"..i]
+            if list and list:IsShown() and MouseIsOver(list) then
+                return
+            end
+        end
+    end
+
+    -- Mouse is outside all dropdowns: close them
+    if CloseDropDownMenus then
+        CloseDropDownMenus()
+    end
+end
+
+-- Hook WorldFrame once so every left click gets checked
+if WorldFrame and not WorldFrame.SocialPlusDropHooked then
+    WorldFrame.SocialPlusDropHooked=true
+    WorldFrame:HookScript("OnMouseDown",SocialPlus_GlobalDropdownClickCloser)
+end
+
 local OPEN_DROPDOWNMENUS_SAVE=nil
 local friend_popup_menus={"FRIEND","FRIEND_OFFLINE","BN_FRIEND","BN_FRIEND_OFFLINE"}
 
@@ -1160,18 +1230,23 @@ function SocialPlus_InitSmoothScroll()
 		end
 
 		-- Apply user-configured scroll speed mapping
-		-- Slider value is divided by SCROLL_BASE to generate internal multiplier.
-		local displayValue = (SocialPlus_SavedVars and SocialPlus_SavedVars.scrollSpeed) or SCROLL_BASE
-		displayValue = tonumber(displayValue) or SCROLL_BASE
-		if displayValue < 1.0 then displayValue = 1.0 end
-		if displayValue > 3.5 then displayValue = 3.5 end
-		local finalMultiplier = displayValue / SCROLL_BASE
-		-- Apply tuning factor to slow overall speed further
-		finalMultiplier = finalMultiplier * SCROLL_TUNE_FACTOR
-		-- Make sure finalMultiplier is not less than a tiny positive number
-		if finalMultiplier <= 0 then finalMultiplier = 0.01 end
-		baseStep = baseStep * finalMultiplier
+		-- Slider is 1.0–5.0, but we compress it to an "effective" 0.8–3.5
+		-- so low end is slower and high end isn't crazy.
+		local displayValue=(SocialPlus_SavedVars and SocialPlus_SavedVars.scrollSpeed) or SCROLL_BASE
+		displayValue=tonumber(displayValue) or SCROLL_BASE
+		if displayValue<1.0 then displayValue=1.0 end
+		if displayValue>5.0 then displayValue=5.0 end
 
+		-- Map 1..5 → 0.8..3.5 (linear compression)
+		local effMin,effMax=0.8,3.5
+		local t=(displayValue-1.0)/(5.0-1.0)      -- 0 → 1 across slider range
+		if t<0 then t=0 end
+		if t>1 then t=1 end
+		local effective=effMin+(effMax-effMin)*t
+
+		local finalMultiplier=(effective/SCROLL_BASE)*SCROLL_TUNE_FACTOR
+		if finalMultiplier<=0 then finalMultiplier=0.01 end
+		baseStep=baseStep*finalMultiplier
 
 		local target=current-delta*baseStep
 		if target<min then target=min end
@@ -3107,8 +3182,8 @@ local function SocialPlus_CreateScrollSpeedPopup()
 	local slider=CreateFrame("Slider","SocialPlus_ScrollSpeedSlider",f,"OptionsSliderTemplate")
 	slider:SetPoint("TOP",f.desc,"BOTTOM",0,-10)
 	slider:SetSize(260,16)
-	-- 1.0 to 3.5 range (0.1 steps) for smoother control
-	slider:SetMinMaxValues(1.0,3.5)
+	-- 1.0 to 5.0 range (0.1 steps) for smoother control
+	slider:SetMinMaxValues(1.0,5.0)
 	slider:SetValueStep(0.1)
 	slider:SetObeyStepOnDrag(true)
 	slider:SetValue(SocialPlus_SavedVars and SocialPlus_SavedVars.scrollSpeed or 2.2)
@@ -3125,7 +3200,7 @@ local function SocialPlus_CreateScrollSpeedPopup()
 	if not _G[slider:GetName().."High"] then
 		local high = slider:CreateFontString(nil,"ARTWORK","GameFontNormalSmall")
 		high:SetPoint("RIGHT",slider,"RIGHT",0,-18)
-		high:SetText("3.5")
+		high:SetText("5.0")
 	end
 
 	slider:SetScript("OnValueChanged",function(self,val)
@@ -3372,10 +3447,10 @@ function SocialPlus_CreateSettingsPanel()
 	local slider=CreateFrame("Slider","SocialPlus_SettingsScrollSpeedSlider",f,"OptionsSliderTemplate")
 	slider:SetPoint("TOPLEFT",desc,"BOTTOMLEFT",0,-5)
 	slider:SetSize(f:GetWidth()-40,16)
-	slider:SetMinMaxValues(1.0,3.5)
+	slider:SetMinMaxValues(1.0,5.0)
 	slider:SetValueStep(0.1)
 	slider:SetObeyStepOnDrag(true)
-	slider:SetValue(SocialPlus_SavedVars and SocialPlus_SavedVars.scrollSpeed or 2.2)
+	slider:SetValue(SocialPlus_SavedVars and SocialPlus_SavedVars.scrollSpeed or 3.0)
 
 	-- Center numeric value under slider
 	slider.text=_G[slider:GetName().."Text"]
@@ -3403,7 +3478,7 @@ function SocialPlus_CreateSettingsPanel()
 		hideLevel:SetChecked(SocialPlus_SavedVars and SocialPlus_SavedVars.hide_high_level)
 		colourNames:SetChecked(SocialPlus_SavedVars and SocialPlus_SavedVars.colour_classes)
 	    prioritizeCurrent:SetChecked(SocialPlus_SavedVars and SocialPlus_SavedVars.prioritize_current_client)
-		slider:SetValue(SocialPlus_SavedVars and SocialPlus_SavedVars.scrollSpeed or 2.2)
+		slider:SetValue(SocialPlus_SavedVars and SocialPlus_SavedVars.scrollSpeed or 3.0)
 	end)
 
 	f:Hide()
