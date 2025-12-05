@@ -1250,12 +1250,17 @@ function SocialPlus_InitSmoothScroll()
 		if target>max then target=max end
 		if target==current then return end
 
+		-- Duration scales with scroll speed:
+		-- speed 1 → ~0.06s (snappy)
+		-- speed 5 → ~0.11s (more glide for big jumps)
+		local duration=0.06+0.05*t
+
 		SocialPlus_ScrollAnim={
 			scrollBar=sb,
 			from=current,
 			to=target,
 			t=0,
-			duration=0.11, -- a bit longer, feels smoother
+			duration=duration,
 		}
 
 		self:SetScript("OnUpdate",SocialPlus_ScrollOnUpdate)
